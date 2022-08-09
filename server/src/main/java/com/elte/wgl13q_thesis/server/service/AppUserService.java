@@ -11,6 +11,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service // bean
@@ -19,17 +21,17 @@ public class AppUserService implements UserDetailsService {
 
     private final AppUserRepository appUserRepository;
 
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException{
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         AppUser user = appUserRepository.findUserByUsername(username);
-        if (user == null){
-            log.error("User {} not found in the database" , username);
+        if (user == null) {
+            log.error("User {} not found in the database", username);
             throw new UsernameNotFoundException("User {} not found in the database");
-        }else{
-            log.info("User {} found in the database",username);
+        } else {
+            log.info("User {} found in the database", username);
         }
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority(user.getRole().name()));
-        return new org.springframework.security.core.userdetails.User(user.getUsername(),user.getPassword(),authorities);
+        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), authorities);
     }
 
     @Autowired // dependency injection

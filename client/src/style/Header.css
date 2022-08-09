@@ -1,0 +1,18 @@
+.header {
+  outline: 1px solid rgba(45, 42, 50, 0.5);
+}
+
+.nav-menu-item {
+  text-decoration: none;
+  color: #1C2541;
+  font-weight: 300;
+}
+
+.login-signup-buttons {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 25%;
+}
+
+/*# sourceMappingURL=Header.css.map */

@@ -1,0 +1,25 @@
+@import './config';
+
+.nav-menu{
+  display: flex;
+  justify-content: space-around;
+  width: 30%;
+  outline : 1px solid blue;
+}
+.menu-item{
+  text-decoration: none;
+  color : $link-color;
+  font-weight: lighter;
+}
+.nav-menu-tabs{
+  display: inherit;
+  justify-content: space-between;
+  width: 40%;
+  outline : 1px solid red;
+}
+
+.logo{
+  font-weight: bolder;
+  font-size:  xx-large;
+  color: $link-color;
+}

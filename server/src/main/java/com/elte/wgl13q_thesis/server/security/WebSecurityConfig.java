@@ -61,7 +61,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //                .antMatchers("/api/**").hasRole(AppUserRole.USER.name())
                 .anyRequest()
                 .permitAll().and().httpBasic();
-        http.addFilter(new CustomAuthenticationFilter(authenticationManagerBean()));
+//        http.addFilter(new CustomAuthenticationFilter(authenticationManagerBean()));
     }
 
     @Bean

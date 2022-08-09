@@ -1,0 +1,19 @@
+.signup-form {
+  //display: flex;
+  flex-direction: column;
+  width: 100%;
+  outline: 1px solid red;
+  background-color: #5f5fac;
+  justify-content: center;
+
+  .MuiBox-root {
+    outline: 1px solid yellow;
+
+  }
+
+}
+
+#form-signup-button{
+  //display: flex;
+  //outline: 1px solid red;
+}
