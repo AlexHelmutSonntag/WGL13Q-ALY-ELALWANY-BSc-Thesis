@@ -5,12 +5,14 @@ import com.elte.wgl13q_thesis.server.filter.CustomAuthenticationFilter;
 import com.elte.wgl13q_thesis.server.model.AppUser;
 import com.elte.wgl13q_thesis.server.model.AppUserRole;
 import com.elte.wgl13q_thesis.server.model.Role;
+import com.elte.wgl13q_thesis.server.service.AppUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -25,14 +27,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.SecurityFilterChain;
-
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.time.Instant;
-
-import static org.springframework.security.config.Customizer.*;
 import static org.springframework.security.config.http.SessionCreationPolicy.*;
 
 @Configuration
@@ -41,11 +35,13 @@ import static org.springframework.security.config.http.SessionCreationPolicy.*;
 @RequiredArgsConstructor
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-    private final UserDetailsService userDetailsService;
+    private final AppUserService userDetailsService;
+
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
@@ -56,29 +52,17 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.csrf().disable();
         http.sessionManagement().sessionCreationPolicy(STATELESS);
         http.authorizeRequests()
-                .antMatchers("/","index","/css/*","/js/*")
-                .permitAll()
-//                .antMatchers("/api/**").hasRole(AppUserRole.USER.name())
-                .anyRequest()
-                .permitAll().and().httpBasic();
-//        http.addFilter(new CustomAuthenticationFilter(authenticationManagerBean()));
+                .antMatchers("/", "index", "/css/*", "/js/*","/login")
+                .authenticated()
+                .and().httpBasic();
     }
+
 
     @Bean
     @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
     }
-
-    @Bean
-    @Override
-    protected UserDetailsService userDetailsService(){
-        log.info("++++++++++++++++++++++" + passwordEncoder().encode("password"));
-        User.UserBuilder annaSmith = User.builder().username("annasmith").password(passwordEncoder().encode("password")).roles(AppUserRole.USER.name());
-        return new InMemoryUserDetailsManager(annaSmith.build());
-    }
-
-
 
 //
 //    @Bean
@@ -90,7 +74,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //        log.info("I am here at {} !" , Timestamp.from(Instant.EPOCH));
 //        return http.build();
 //    }
-//
+
 //    @Bean
 //    public InMemoryUserDetailsManager userDetailsService() {
 //        UserDetails user = User.withDefaultPasswordEncoder()

@@ -3,15 +3,9 @@ package com.elte.wgl13q_thesis.server.controller;
 import com.elte.wgl13q_thesis.server.model.AppUser;
 import com.elte.wgl13q_thesis.server.model.AppUserRole;
 import com.elte.wgl13q_thesis.server.service.AppUserService;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import java.net.URI;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -29,7 +23,6 @@ public class AppUserController {
     public AppUserController(AppUserService appUserService) {
         this.appUserService = appUserService;
     }
-
 
     @GetMapping(path = "{userId}")
     public AppUser getUser(@PathVariable("userId") Long userId) {
@@ -50,7 +43,7 @@ public class AppUserController {
         } else {
             user = new AppUser(appUser.getUsername(), appUser.getPassword(), appUser.getFirstName(), appUser.getLastName(), appUser.getRole(),dob, appUser.getEmail());
         }
-            appUserService.addNewUser(user);
+        appUserService.addNewUser(user);
     }
 
     @DeleteMapping(path = "{userId}")

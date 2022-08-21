@@ -20,7 +20,6 @@ public class AppUser {
     private String username;
     @Column(columnDefinition = "varchar(60)")
     private String password;
-
     private String firstName;
     private String lastName;
     //    private final Set<AppUserRole> roles = new HashSet<>();
@@ -142,5 +141,13 @@ public class AppUser {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setDob(LocalDate dob) {
+        this.dob = dob;
     }
 }

@@ -2,6 +2,8 @@ package com.elte.wgl13q_thesis.server;
 
 import com.elte.wgl13q_thesis.server.model.AppUser;
 import com.elte.wgl13q_thesis.server.repo.AppUserRepository;
+import com.elte.wgl13q_thesis.server.service.AppUserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -23,10 +25,8 @@ public class ServerApplication {
         SpringApplication.run(ServerApplication.class, args);
     }
 
-
-
     @Bean
-    CommandLineRunner commandLineRunner(AppUserRepository repository) {
+    CommandLineRunner commandLineRunner(AppUserService userService) {
         return args -> {
             AppUser mariam = new AppUser(
                     "mariam21", "password", "Mariam", "Lobrecht", USER,
@@ -40,7 +40,9 @@ public class ServerApplication {
                     "annasmith", "password", "Anna", "Smith", ADMIN,
                     LocalDate.of(1999, SEPTEMBER, 3),
                     "annasmith@gmail.com");
-            repository.saveAll(List.of(mariam, ali,anna));
+            userService.addNewUser(mariam);
+            userService.addNewUser(ali);
+            userService.addNewUser(anna);
         };
     }
 
