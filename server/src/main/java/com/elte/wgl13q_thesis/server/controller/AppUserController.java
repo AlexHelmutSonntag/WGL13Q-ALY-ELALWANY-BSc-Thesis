@@ -5,7 +5,12 @@ import com.elte.wgl13q_thesis.server.model.AppUserRole;
 import com.elte.wgl13q_thesis.server.service.AppUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.ServletException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -13,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = "api/v1/user")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins="http://localhost:3000")
 @Slf4j
 public class AppUserController {
 
@@ -25,8 +30,8 @@ public class AppUserController {
     }
 
     @GetMapping(path = "{userId}")
-    public AppUser getUser(@PathVariable("userId") Long userId) {
-        return appUserService.getUser(userId);
+    public ResponseEntity<AppUser> getUser(@PathVariable("userId") Long userId) {
+        return new ResponseEntity<AppUser>(appUserService.getUser(userId),HttpStatus.OK);
     }
 
     @GetMapping
@@ -35,7 +40,7 @@ public class AppUserController {
     }
 
     @PostMapping(value = "/new")
-    public void registerNewUser(@RequestBody AppUser appUser) {
+    public ResponseEntity<String> registerNewUser(@RequestBody AppUser appUser) {
         LocalDate dob = LocalDate.parse(appUser.getDob().toString(), DateTimeFormatter.ISO_DATE);
         AppUser user;
         if (appUser.getRole() == null) {
@@ -43,7 +48,10 @@ public class AppUserController {
         } else {
             user = new AppUser(appUser.getUsername(), appUser.getPassword(), appUser.getFirstName(), appUser.getLastName(), appUser.getRole(),dob, appUser.getEmail());
         }
-        appUserService.addNewUser(user);
+        if(appUserService.addNewUser(user)){
+            return new ResponseEntity<String>("New user created!", HttpStatus.CREATED);
+        }
+        return new ResponseEntity<String>("User failed to create!", HttpStatus.CONFLICT);
     }
 
     @DeleteMapping(path = "{userId}")
@@ -58,6 +66,20 @@ public class AppUserController {
             @RequestParam(required = false) String email) {
         appUserService.updateUserFirstName(userId, firstName, email);
     }
+
+
+    @PostMapping(path="/login")
+    public ResponseEntity<String> loginUser(
+            @RequestParam(required = true) String username,
+            @RequestParam(required = true) String password) {
+
+        log.info("username : " + username);
+        log.info("password : " + password);
+
+        return new ResponseEntity<String>("User login",HttpStatus.OK);
+    }
+
+
 
 //    @PatchMapping(path = "userId")
 //    public void removeUserRole(
