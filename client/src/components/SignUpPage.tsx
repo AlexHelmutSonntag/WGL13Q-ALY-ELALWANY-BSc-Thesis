@@ -1,4 +1,5 @@
 import React from "react";
+import {useNavigate} from 'react-router-dom';
 import {
     Box,
     Container,
@@ -8,7 +9,6 @@ import {
     InputLabel,
     MenuItem,
     OutlinedInput,
-    Select,
     SelectChangeEvent,
     Stack,
     TextField
@@ -18,26 +18,14 @@ import {LocalizationProvider} from '@mui/x-date-pickers/LocalizationProvider';
 import {DesktopDatePicker} from '@mui/x-date-pickers/DesktopDatePicker';
 import '../style/SignUpPage.scss';
 import {Visibility, VisibilityOff} from "@mui/icons-material";
-import {Gender} from "../Types";
-import {FormSignupButton} from "./FormSignUpButton";
+import {Gender, UserState} from "../Types";
+import {ReturnFormButton} from "./FormButton";
 import axios from "axios";
-
-interface State {
-    firstName: string;
-    lastName: string;
-    date: Date | null;
-    gender: Gender;
-    username: string;
-    email: string;
-    password: string;
-    repeatedPassword: string;
-    showPassword: boolean;
-    passwordsEqual: boolean;
-    validEmail: boolean;
-}
+import {validateEmail, validatePasswordInput} from "../Utils";
 
 export const SignUpPage: React.FC = () => {
-    const [values, setValues] = React.useState<State>({
+    const navigate = useNavigate();
+    const [values, setValues] = React.useState<UserState>({
         firstName: '',
         lastName: '',
         date: new Date('1999-01-01'),
@@ -51,23 +39,8 @@ export const SignUpPage: React.FC = () => {
         validEmail: false,
     });
 
-    const validateEmail = (email: string) => {
-        const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        return re.test(email);
-        // return String(email)
-        //     .toLowerCase()
-        //     .match(
-        //         /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-        //     );
-    };
-    const validatePasswordInput = (password: string, repeatedPassword: string): boolean => {
-        if (password === "" || repeatedPassword === "") {
-            return false;
-        }
-        return password.trim() === repeatedPassword.trim();
-    }
     const handleChange =
-        (prop: keyof State) => (event: React.ChangeEvent<HTMLInputElement> | any) => {
+        (prop: keyof UserState) => (event: React.ChangeEvent<HTMLInputElement> | any) => {
             values.passwordsEqual = validatePasswordInput(values.password, values.repeatedPassword);
             values.validEmail = validateEmail(values.email);
             setValues({...values, [prop]: event.target.value});
@@ -122,11 +95,19 @@ export const SignUpPage: React.FC = () => {
                 email: body.email,
                 dob: dob,
                 username: body.username,
+                gender: body.gender
             }
             console.log(body);
             axios.post('http://localhost:8080/api/v1/user/new',
                 payload,
-            ).then((response) => console.log(response)).catch((error) => console.log(error));
+            ).then((response) => {
+                    console.log(response);
+                    if (response.status === 201) {
+                        alert("User created, try your credentials..");
+                        navigate("/login");
+                    }
+                }
+            ).catch((error) => console.log(error));
 
             // axios({
             //     method: 'post',
@@ -143,172 +124,174 @@ export const SignUpPage: React.FC = () => {
 
     async function getUserData() {
         try {
-            const response = await axios.get("http://localhost:8080/api/v1/user");
+            const response = await axios.get("http://localhost:8080/api/v1/user/1");
             console.log(response);
         } catch (error) {
-            console.log(error);
             console.log(error);
         }
     }
 
     async function displayUsers() {
-        await fetch("http://localhost:8080/api/v1/user", {
+        await fetch("http://localhost:8080/api/v1/user/all", {
             method: 'GET',
         })
             .then((response) => response.json())
             .then((data) => console.log(data))
             .catch((err) => console.error(err));
-        // const users = axios.get("http://localhost:8080/api/v1/user");
-        // console.log(users);
+        // const users = axios.get("http://localhost:8080/api/v1/user").then(r => console.log(r));
     }
-
 
     // displayUsers().then(r => console.log(r));
 
     return (
-        <div style={{backgroundColor: '#3A506B', padding: '20px'}}>
+        <div style={{backgroundColor: '#3A506B', padding: '10px 10px 10px 10px'}}>
             <div style={{backgroundColor: '#1C2541', paddingLeft: '50px', paddingTop: '10px', borderRadius: '15px'}}>
                 <h1 style={{color: "white", paddingTop: '10px'}}>
                     Sign Up
                 </h1>
-                <Container sx={{
-                    '& .MuiBox-root': {
-                        display: 'flex',
-                        flexDirection: 'column',
-                        outline: '1px solid yellow',
-                        alignItems: 'center',
-                    },
-                }}>
-                    <Box component={"form"} sx={{
-                        '& .MuiTextField-root': {
-                            m: 1,
-                            width: '25ch',
-                            backgroundColor: 'rgba(58, 80, 107, 0.7)',
+                <div style={{display: `flex`, alignItems:`center` ,flexDirection: `column`, outline: `1px red solid`}}>
+                    <Container sx={{
+                        '& .MuiBox-root': {
                             display: 'flex',
-                            borderRadius: '10px',
-                            marginTop: 1,
-                            marginBottom: 1,
-                            borderColor: 'rgba(58, 80, 107, 0.7)',
-                            color: '#4A5B70',
-                            '&:hover': {
-                                borderColor: 'transparent',
-                                // outline:'1px solid rgba(58, 80, 107, 0.7)',
-                            }
+                            flexDirection: 'column',
+                            alignItems: 'center',
                         },
-                        // '& .MuiInputBase-input': {
-                        //     // outline:'1px solid red',
-                        //     borderColor: 'rgba(58, 80, 107, 0.7)',
-                        //     backgroundColor: 'rgba(58, 80, 107, 0.7)',
-                        //     borderRadius: '8px',
-                        //     '&:hover' :{
-                        //         borderColor: 'transparent',
-                        //         // outline:'1px solid red',
-                        //         // borderColor: 'rgba(58, 80, 107, 0.7)',
-                        //
-                        //     }
-                        // }
                     }}>
-                        <TextField required id="firstname-field" value={values.firstName} label="First name"
-                                   onChange={handleChange('firstName')}
-                                   variant="outlined"/>
-                        <TextField required id="lastname-field" value={values.lastName}
-                                   onChange={handleChange('lastName')} label="Last name"
-                                   variant="outlined"/>
-                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                            <Stack spacing={3}>
-                                <DesktopDatePicker
-                                    label="Birth date"
-                                    inputFormat="MM/dd/yyyy"
-                                    value={values.date}
-                                    onChange={handleDateChange}
-                                    minDate={new Date('1990-01-01')}
-                                    maxDate={new Date()}
-                                    renderInput={(params: any) => <TextField {...params} />}
-                                />
-                            </Stack>
-                        </LocalizationProvider>
-                        <InputLabel id="gender-label" sx={{
-                            marginLeft: '10px', color: '#4A5B70',
-                        }}>Gender</InputLabel>
-                        <Select
-                            labelId="gender-label"
-                            id="demo-simple-select"
-                            value={values.gender}
-                            label="Gender"
-                            onChange={handleChange('gender')}
-                            sx={{
-                                marginBottom: 1,
-                                width: '25.5ch',
+                        <Box component={"form"} sx={{
+                            '& .MuiTextField-root': {
+                                m: 1,
+                                width: '25ch',
                                 backgroundColor: 'rgba(58, 80, 107, 0.7)',
-                            }}
-                        >
-                            <MenuItem value={'Male'}>Male</MenuItem>
-                            <MenuItem value={'Female'}>Female</MenuItem>
-                            <MenuItem value={'Other'}>Other</MenuItem>
-                        </Select>
-                        <TextField required id="username-field" value={values.username}
-                                   onChange={handleChange('username')} label="Username"
-                                   variant="outlined"/>
-                        <TextField required id="outlined-basic" value={values.email} onChange={handleChange('email')}
-                                   label="Email" variant="outlined"/>
-                        <FormControl
-                            sx={{m: 1, width: '25ch', backgroundColor: 'rgba(58, 80, 107, 0.7)', borderRadius: '10px',}}
-                            variant="outlined">
-                            <InputLabel required htmlFor="password-input">Password</InputLabel>
-                            <OutlinedInput
-                                id="password-input"
-                                type={values.showPassword ? 'text' : 'password'}
-                                value={values.password}
-                                onChange={handleChange('password')}
-                                endAdornment={
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            aria-label="toggle password visibility"
-                                            onClick={handleClickShowPassword}
-                                            onMouseDown={handleMouseDownPassword}
-                                            edge="end"
-                                        >
-                                            {values.showPassword ? <VisibilityOff/> : <Visibility/>}
-                                        </IconButton>
-                                    </InputAdornment>
+                                display: 'flex',
+                                borderRadius: '10px',
+                                marginTop: 1,
+                                marginBottom: 1,
+                                borderColor: 'rgba(58, 80, 107, 0.7)',
+                                color: '#4A5B70',
+                                '&:hover': {
+                                    borderColor: 'transparent',
                                 }
-                                label="Password"
-                            />
-                        </FormControl>
-                        <FormControl
-                            sx={{m: 1, width: '25ch', backgroundColor: 'rgba(58, 80, 107, 0.7)', borderRadius: '10px'}}
-                            variant="outlined">
-                            <InputLabel required htmlFor="repeat-password-input">Repeat Password</InputLabel>
-                            <OutlinedInput
-                                id="repeat-password-input"
-                                type={values.showPassword ? 'text' : 'password'}
-                                value={values.repeatedPassword}
-                                onChange={handleChange('repeatedPassword')}
-                                // endAdornment={
-                                //     <InputAdornment position="end">
-                                //         <IconButton
-                                //             aria-label="toggle password visibility"
-                                //             onClick={handleClickShowPassword}
-                                //             onMouseDown={handleMouseDownPassword}
-                                //             edge="end"
-                                //         >
-                                //             {values.showPassword ? <VisibilityOff/> : <Visibility/>}
-                                //         </IconButton>
-                                //     </InputAdornment>
-                                // }
-                                label="Repeat Password"
-                            />
-                        </FormControl>
-                        <div id={"form-signup-button"}>
-                            <FormSignupButton
-                                onClick={() => sendSignUpRequest(values)}
-                            >Sign Up</FormSignupButton>
-                        </div>
-                        <span style={{color: "rgba(255, 255, 255, 0.7)", paddingBottom: "20px", paddingTop: "10px"}}>Already have an account ? <a
-                            href="/login" style={{paddingLeft: '2px', fontWeight: "bold", color: "#5BC0BE"}}>Sign in</a></span>
-                    </Box>
-                </Container>
+                            },
+
+                        }}>
+                            <div style={{
+                                display: "flex",
+                                marginTop: '10px',
+                            }}>
+                                <TextField required id="firstname-field" value={values.firstName} label="First name"
+                                           onChange={handleChange('firstName')}
+                                           variant="outlined"/>
+                                <TextField required id="lastname-field" value={values.lastName}
+                                           onChange={handleChange('lastName')}
+                                           label="Last name"
+                                           variant="outlined"/>
+                            </div>
+                            <div style={{
+                                display: "flex",
+                                marginTop: '10px',
+                            }}>
+                                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                                    <Stack spacing={3} sx={{}}>
+                                        <DesktopDatePicker
+                                            label="Birth date"
+                                            inputFormat="MM/dd/yyyy"
+                                            value={values.date}
+                                            onChange={handleDateChange}
+                                            minDate={new Date('1940-01-01')}
+                                            maxDate={new Date()}
+                                            renderInput={(params: any) => <TextField {...params}
+                                            />}
+                                        />
+                                    </Stack>
+                                </LocalizationProvider>
+                                <div
+                                    style={{}}>
+                                    <TextField
+                                        id="demo-simple-select"
+                                        value={values.gender}
+                                        label="Gender"
+                                        variant={"outlined"}
+                                        select
+                                        onChange={handleChange('gender')}
+                                        sx={{
+                                            marginBottom: 1,
+                                            width: '25.5ch',
+                                            height: '6ch',
+                                            backgroundColor: 'rgba(58, 80, 107, 0.7)',
+                                        }}
+                                    >
+                                        <MenuItem value={Gender.MALE}>Male</MenuItem>
+                                        <MenuItem value={Gender.FEMALE}>Female</MenuItem>
+                                        <MenuItem value={Gender.OTHER}>Other</MenuItem>
+                                    </TextField>
+                                </div>
+                            </div>
+                            <div style={{
+                                marginTop: '10px',
+                                display: "flex"
+                            }}>
+                                <TextField required id="username-field" value={values.username}
+                                           onChange={handleChange('username')}
+                                           label="Username"
+                                           variant="outlined"/>
+                                <TextField required id="outlined-basic" value={values.email}
+                                           onChange={handleChange('email')}
+                                           label="Email" variant="outlined"/>
+                            </div>
+                            <div style={{
+                                display: "flex",
+                                marginTop: '10px',
+                            }}>
+                                <FormControl
+                                    sx={{m: 1, width: '25ch', backgroundColor: 'rgba(58, 80, 107, 0.7)', borderRadius: '10px',}}
+                                    variant="outlined">
+                                    <InputLabel required htmlFor="password-input">Password</InputLabel>
+                                    <OutlinedInput
+                                        id="password-input"
+                                        type={values.showPassword ? 'text' : 'password'}
+                                        value={values.password}
+                                        onChange={handleChange('password')}
+                                        endAdornment={
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    aria-label="toggle password visibility"
+                                                    onClick={handleClickShowPassword}
+                                                    onMouseDown={handleMouseDownPassword}
+                                                    edge="end"
+                                                >
+                                                    {values.showPassword ? <VisibilityOff/> : <Visibility/>}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        }
+                                        label="Password"
+                                    />
+                                </FormControl>
+                                <FormControl
+                                    sx={{m: 1, width: '25ch', backgroundColor: 'rgba(58, 80, 107, 0.7)', borderRadius: '10px'}}
+                                    variant="outlined">
+                                    <InputLabel required htmlFor="repeat-password-input">Repeat Password</InputLabel>
+                                    <OutlinedInput
+                                        id="repeat-password-input"
+                                        type={values.showPassword ? 'text' : 'password'}
+                                        value={values.repeatedPassword}
+                                        onChange={handleChange('repeatedPassword')}
+                                        label="Repeat Password"
+                                    />
+                                </FormControl>
+                            </div>
+                        </Box>
+                    </Container>
+                    <div id={"form-signup-button"}>
+                        <ReturnFormButton
+                            onClick={() => sendSignUpRequest(values)}
+                        >Sign Up</ReturnFormButton>
+                    </div>
+                    <span style={{color: "rgba(255, 255, 255, 0.7)", paddingBottom: "20px", paddingTop: "10px"}}>Already have an account ? <a
+                        href="/login"
+                        style={{paddingLeft: '2px', fontWeight: "bold", color: "#5BC0BE"}}>Sign in</a></span>
+                </div>
             </div>
+
         </div>
     )
 }

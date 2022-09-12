@@ -26,6 +26,7 @@ public class AppUser {
     private AppUserRole role;
     private LocalDate dob;
 
+    private Gender gender;
     private String email;
     @Transient // This field won't be a column in our database
     private Integer age;
@@ -34,16 +35,34 @@ public class AppUser {
 
     }
 
-
+    public AppUser(String username, String password, String firstName, String lastName, AppUserRole role, LocalDate dob, String email, Gender gender) {
+        this.username = username;
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.role = role;
+        this.dob = dob;
+        this.email = email;
+        this.gender = gender;
+    }
+    public AppUser(String password, String firstName, String lastName, AppUserRole role, LocalDate dob, String email) {
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.role = role;
+        this.dob = dob;
+        this.email = email;
+        this.gender = Gender.OTHER;
+    }
     public AppUser(String username, String password, String firstName, String lastName, AppUserRole role, LocalDate dob, String email) {
         this.username = username;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
         this.role = role;
-//        this.roles.add(role);
         this.dob = dob;
         this.email = email;
+        this.gender = Gender.OTHER;
     }
 
     public AppUser(Long id, String username, String password, String firstName, String lastName, AppUserRole role, LocalDate dob, String email) {
@@ -53,9 +72,17 @@ public class AppUser {
         this.firstName = firstName;
         this.lastName = lastName;
         this.role = role;
-//        this.roles.add(role);
         this.dob = dob;
         this.email = email;
+        this.gender = Gender.OTHER;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
     }
 
     public AppUserRole getRole() {

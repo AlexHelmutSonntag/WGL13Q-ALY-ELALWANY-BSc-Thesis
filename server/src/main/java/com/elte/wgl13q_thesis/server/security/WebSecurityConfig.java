@@ -2,6 +2,7 @@ package com.elte.wgl13q_thesis.server.security;
 
 
 import com.elte.wgl13q_thesis.server.filter.CustomAuthenticationFilter;
+import com.elte.wgl13q_thesis.server.filter.CustomAuthorizationFilter;
 import com.elte.wgl13q_thesis.server.model.AppUser;
 import com.elte.wgl13q_thesis.server.model.AppUserRole;
 import com.elte.wgl13q_thesis.server.model.Role;
@@ -27,6 +28,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -38,7 +42,6 @@ import static org.springframework.security.config.http.SessionCreationPolicy.*;
 
 @Configuration
 @EnableWebSecurity
-@EnableWebMvc
 @Slf4j
 @RequiredArgsConstructor
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
@@ -56,14 +59,21 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Override
-    protected void configure(HttpSecurity http) throws Exception{
-        http
-                .cors().and().csrf().disable()
-                .authorizeRequests()
-                .antMatchers("*/signup","*/login","/").permitAll()
-                .and().formLogin()
-                .loginPage("http://localhost:3000/login").failureForwardUrl("http://localhost:3000/login").defaultSuccessUrl("http://localhost:3000/docs")
-                .and().httpBasic();
+    protected void configure(HttpSecurity http) throws Exception {
+        http.cors().and().csrf().disable();
+        http.authorizeRequests().antMatchers("/login","/api/v1/user/**", "/api/v1/user/new","/api/v1/user/token/refresh/**","/api/v1/user/test_token","/api/v1/user/updateUser/**").permitAll();
+//        http.authorizeRequests().antMatchers("/api/v1/user/all").authenticated();
+
+//               .and().authorizeRequests().antMatchers("*/login").authenticated()
+//        http.formLogin()
+//                .loginPage("http://localhost:3000/login")
+//                .defaultSuccessUrl("http://localhost:3000/docs", true);
+
+        http.authorizeRequests().anyRequest().authenticated();
+//                .and().httpBasic()
+
+        http.addFilter(new CustomAuthenticationFilter(authenticationManagerBean()));
+        http.addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 
     @Bean
@@ -71,6 +81,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
     }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration config = new CorsConfiguration();
@@ -78,7 +89,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         config.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "DELETE", "PUT", "PATCH"));
         config.setAllowCredentials(true);
-        config.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type","Access-Control-Allow-Origin"));
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "Access-Control-Allow-Origin"));
 
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

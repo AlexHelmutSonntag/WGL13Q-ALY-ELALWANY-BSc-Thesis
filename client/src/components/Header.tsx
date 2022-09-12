@@ -5,7 +5,6 @@ import {SignupButton} from "./SignupButton";
 import '../style/Header.scss'
 import MenuIcon from '@mui/icons-material/Menu';
 import {AppBar, Box, Button, Toolbar, Typography} from "@mui/material";
-
 export const Header: React.FC = () => {
     return (
         <div className={"header"}>

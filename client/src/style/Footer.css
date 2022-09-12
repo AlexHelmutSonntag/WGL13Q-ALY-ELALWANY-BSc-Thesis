@@ -8,9 +8,14 @@ ul {
 }
 
 .footer-list {
+  display: flex;
+  min-height: 6vh;
+  align-items: center;
+  justify-content: center;
   background-color: #0B132B;
   color: #FFFFFF;
   text-decoration: none;
+  outline: 1px solid red;
 }
 .footer-list li {
   font-size: 0.9em;
