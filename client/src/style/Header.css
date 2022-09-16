@@ -1,3 +1,6 @@
+@font-face {
+  font-family: "Open Sans";
+}
 .header {
   outline: 1px solid rgba(45, 42, 50, 0.5);
 }

@@ -1,20 +1,23 @@
 import React from "react";
-import {UpdateUserState, UserState} from "../Types";
+import {AuthenticatedUser, UpdateUserState, UserState} from "../Types";
 import {UserForm} from "./UserForm";
 import {ReturnFormButton, RedFormButton, DiscardFormButton} from "./FormButton";
-import {useNavigate} from 'react-router-dom';
+import {Navigate, useNavigate} from 'react-router-dom';
 import {validateEmail} from "../Utils";
 import axios from "axios";
+import {CustomButton} from "./CustomButton";
 
 const redButtonTheme = {
     "background-color": "#FFFFFF",
     "color": "#ff0000",
 }
 
-export const AccountSettingsPage = (userState: UpdateUserState) => {
+export const AccountSettingsPage : React.FC<AuthenticatedUser> = (userState: AuthenticatedUser) => {
     const navigate = useNavigate();
     let userDetails : UserState;
-
+    if (!userState.isAuthenticated){
+        return <Navigate to={"/login"}/>
+    }
     let receiveDataFromChild =  (value: UserState)  => {
         userDetails = value;
         console.log(value);

@@ -1,6 +1,6 @@
-import React from "react";
+import React, {useState} from "react";
 import qs from 'qs';
-import { useNavigate } from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 
 import {
     Box,
@@ -15,9 +15,14 @@ import {ReturnFormButton} from "./FormButton";
 import {LoginState} from "../Types";
 import axios from "axios";
 
+interface LoginProps {
+    isLoggedIn?: boolean;
+    changeLoginState: (value: boolean) => void;
+}
 
-export const SignInPage: React.FC = () => {
+export const SignInPage: React.FC<LoginProps> = (props) => {
     const navigate = useNavigate();
+
     const [values, setValues] = React.useState<LoginState>({
         email: '',
         username: '',
@@ -48,8 +53,7 @@ export const SignInPage: React.FC = () => {
         event.preventDefault();
     };
 
-
-    const sendSignInRequest : any = async (body: any) => {
+    const sendSignInRequest: any = async (body: any) => {
         if (body.password !== "") {
             let params: any = {
                 username: body.username, password: body.password
@@ -63,30 +67,16 @@ export const SignInPage: React.FC = () => {
             }).then(response => {
                 console.log(response);
                 if (response.data.access_token && response.data.refresh_token) {
+                    props.changeLoginState(true);
+                    localStorage.setItem('access-token', response.data.access_token);
+                    localStorage.setItem('refresh-token', response.data.refresh_token);
+                    localStorage.setItem('isAuthenticated', "true");
                     navigate("/home");
                 }
             }).catch(err => console.log(err));
-
-            // axios.post('http://localhost:8080/login', params, {
-            //         params: {
-            //             username: body.username,
-            //             password: body.password,
-            //         }
-            //     }
-            // ).then((response) => {
-            //
-            //     console.log(response)
-            //
-            //     if (response.status === 200) {
-            //
-            //     } else {
-            //         console.log("Something went wrong with the login, try again!");
-            //     }
-            //
-            // }).catch((error) => console.log(error));
-
         }
     }
+
     return (
         <div style={{backgroundColor: '#3A506B', padding: '10px 10px 10px 10px', minHeight: '80vh'}}>
             <div

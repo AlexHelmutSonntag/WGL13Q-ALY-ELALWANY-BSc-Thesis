@@ -47,15 +47,6 @@ export const SignUpPage: React.FC = () => {
             handleDateChange(values.date);
         };
 
-    // const handleGenderChangeNew = (event: SelectChangeEvent) => {
-    //     setValues(
-    //         {
-    //             ...values,
-    //             gender: Gender[event.target.value as keyof typeof Gender]
-    //         }
-    //     )
-    // }
-
     const [gender, setGender] = React.useState<Gender | string | undefined>(Gender.MALE);
     const handleGenderChange = (event: SelectChangeEvent) => {
         setValues({
@@ -109,15 +100,6 @@ export const SignUpPage: React.FC = () => {
                 }
             ).catch((error) => console.log(error));
 
-            // axios({
-            //     method: 'post',
-            //     url: 'http://localhost:8080/api/v1/user/new',
-            //     data: body
-            // }).then((response) => {
-            //     console.log(response);
-            // }).catch((error) => {
-            //     console.log(error());
-            // });
         }
 
     }

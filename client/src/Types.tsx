@@ -27,7 +27,10 @@ export type UserProps = UserState & {
     passValuesToParent?: (value: UserState) => void;
 }
 
+export type AuthenticatedUser = UpdateUserState &{
+    isAuthenticated:boolean;
+}
 
-export type UpdateUserState = Pick<UserProps,"firstName"|"lastName"|"username"|"email"|"date"|"role"|"password"|"gender"|"passValuesToParent">
+export type UpdateUserState = Pick<UserProps,"firstName"|"lastName"|"date"|"gender"|"role"|"username"|"email"|"password"|"passValuesToParent">
 
 export type LoginState = Pick<UserState, "email" | "password" | "validEmail" | "showPassword" | "username">;

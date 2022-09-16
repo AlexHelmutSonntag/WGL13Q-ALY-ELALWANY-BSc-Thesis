@@ -7,7 +7,6 @@ import {
     InputLabel,
     MenuItem,
     OutlinedInput,
-    SelectChangeEvent,
     Stack,
     TextField
 } from "@mui/material";
@@ -50,7 +49,6 @@ export const UserForm: React.FC<UpdateUserState> = (userState: UpdateUserState,)
             setValues({...values, [prop]: event.target.value});
             handleDateChange(values.date);
         };
-
 
     // const [gender, setGender] = React.useState<Gender | string | undefined>(Gender.MALE);
     // const handleGenderChange = (event: SelectChangeEvent) => {
