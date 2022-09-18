@@ -51,12 +51,22 @@ public class AppUserController {
         this.appUserService = appUserService;
     }
 
-    @GetMapping(path = "{userId}")
-    public ResponseEntity<?> getUser(@PathVariable("userId") Long userId) throws IllegalStateException {
-        try {
-            return new ResponseEntity<AppUser>(appUserService.fetchUserFromDB(userId), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<String>("error : User with id `" + userId + "` does not exist.", HttpStatus.NOT_FOUND);
+//    @GetMapping(path = "{userId}")
+//    public ResponseEntity<?> getUser(@PathVariable("userId") Long userId) throws IllegalStateException {
+//        try {
+//            return new ResponseEntity<AppUser>(appUserService.fetchUserFromDB(userId), HttpStatus.OK);
+//        } catch (Exception e) {
+//            return new ResponseEntity<String>("error : User with id `" + userId + "` does not exist.", HttpStatus.NOT_FOUND);
+//        }
+//    }
+
+
+    @GetMapping(path="{username}")
+    public ResponseEntity<?> getUser(@PathVariable("username") String username) throws IllegalStateException{
+        try{
+            return new ResponseEntity<AppUser>(appUserService.fetchUserFromDB(username),HttpStatus.OK);
+        }catch (Exception e) {
+            return new ResponseEntity<String>("error : User with username `" + username + "` does not exist.", HttpStatus.NOT_FOUND);
         }
     }
 
@@ -103,9 +113,11 @@ public class AppUserController {
 //        appUserService.updateUser(username, firstName, lastName, email, password);
 //        return new ResponseEntity<String>("User updated!", HttpStatus.OK);
 //    }
+
     @PutMapping(path = "/updateUser/{username}")
     public ResponseEntity<String> updateUserDetails(@PathVariable("username") String username,
                                                     @RequestBody AppUser appUser, HttpServletResponse response) throws Exception {
+
         try {
             appUserService.updateUser(username, appUser);
             return new ResponseEntity<String>("User updated!", HttpStatus.OK);
