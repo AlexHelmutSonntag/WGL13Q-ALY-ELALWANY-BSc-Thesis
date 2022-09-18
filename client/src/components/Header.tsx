@@ -7,27 +7,27 @@ import MenuIcon from '@mui/icons-material/Menu';
 import {AppBar, Box, Button, Toolbar, Typography} from "@mui/material";
 import PersonIcon from '@mui/icons-material/Person';
 import {useNavigate} from "react-router-dom";
+import {useAppDispatch, useAppSelector} from "../store/hooks";
+import {removeUser, selectUser} from "../feature/user/userSlice";
 
 interface HeaderProps {
     loggedIn: boolean;
 }
 
-const styles = {
-    largeIcon: {
-        width: 60,
-        height: 60,
-    },
-
-};
 export const Header: React.FC<HeaderProps> = (props) => {
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
+    const user = useAppSelector(selectUser);
     const logOutUser: any = () => {
         localStorage.removeItem('refresh-token');
         localStorage.removeItem('access-token');
         localStorage.removeItem('isAuthenticated');
+        dispatch({type:"USER_LOGOUT"});
+        dispatch(removeUser(""))
         navigate("/login");
     }
 
+    const conditionalRef = user.isAuthenticated? "/home" : "/";
     return (
         <div className={"header"}>
             <AppBar position="static" style={{
@@ -41,7 +41,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
                                 variant="h4"
                                 noWrap
                                 component="a"
-                                href="/"
+                                href= {conditionalRef}
                                 sx={{
                                     mr: 2,
                                     fontFamily: 'open Sans',
@@ -74,7 +74,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
                                     Docs
                                 </Button>
                             </Box>
-                            {localStorage.getItem("isAuthenticated") &&
+                            {user.isAuthenticated &&
                                 <Box>
                                     <Button href={"/start"} sx={{
                                         fontSize: 'x-large',
@@ -94,7 +94,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
                                 justifyContent: "space-between",
                                 alignItems: "center"
                             }}>
-                                {localStorage.getItem("isAuthenticated") ?
+                                {user.isAuthenticated ?
                                     [
                                         <LoginButton onClick={logOutUser}>Logout</LoginButton>,
                                         <a href={"/account"}>

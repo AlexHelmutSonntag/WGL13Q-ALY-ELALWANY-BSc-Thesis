@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import qs from 'qs';
-import {useNavigate} from 'react-router-dom';
+import {Navigate, useNavigate} from 'react-router-dom';
 
 import {
     Box,
@@ -12,17 +12,32 @@ import {
 } from "@mui/material";
 import {Visibility, VisibilityOff} from "@mui/icons-material";
 import {ReturnFormButton} from "./FormButton";
-import {LoginState} from "../Types";
+import {LoginState, UpdateUserState} from "../Types";
 import axios from "axios";
+import {useAppDispatch, useAppSelector} from "../store/hooks";
+import {selectToken, setToken} from "../feature/token/tokenSlice";
+import {
+    selectUser, setAuthenticated,
+    setDOB,
+    setEmail,
+    setFirstname,
+    setGender,
+    setLastname,
+    setRole,
+    setUsername
+} from "../feature/user/userSlice";
 
 interface LoginProps {
-    isLoggedIn?: boolean;
-    changeLoginState: (value: boolean) => void;
+    isAuthenticated?: boolean;
+    changeLoginState: (value: boolean, username: string, user: UpdateUserState) => void;
 }
 
 export const SignInPage: React.FC<LoginProps> = (props) => {
-    const navigate = useNavigate();
 
+    const navigate = useNavigate();
+    const dispatch = useAppDispatch()
+    const accessToken = useAppSelector(selectToken)
+    const user = useAppSelector(selectUser);
     const [values, setValues] = React.useState<LoginState>({
         email: '',
         username: '',
@@ -30,6 +45,10 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
         validEmail: false,
         showPassword: false,
     });
+
+    if (user.isAuthenticated) {
+        return <Navigate to={"/home"}/>
+    }
 
     const validateEmail = (email: string) => {
         const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -58,24 +77,57 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
             let params: any = {
                 username: body.username, password: body.password
             }
-            console.log(params);
             await axios({
                 method: 'post',
                 url: 'http://localhost:8080/login',
                 headers: {'content-type': 'application/x-www-form-urlencoded'},
                 data: qs.stringify(params),
             }).then(response => {
-                console.log(response);
+                console.log(`Login response:\n ${response}`);
                 if (response.data.access_token && response.data.refresh_token) {
-                    props.changeLoginState(true);
+                    //DEPRECATED
                     localStorage.setItem('access-token', response.data.access_token);
                     localStorage.setItem('refresh-token', response.data.refresh_token);
                     localStorage.setItem('isAuthenticated', "true");
+
+                    console.log(response.data.access_token);
+                    dispatch(setToken(response.data.access_token));
+                    dispatch(setAuthenticated(true));
+                    console.log(`From store : \n${user}`);
+                    let config = {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${response.data.access_token}`
+                        }
+                    }
+                    fetchUserDetails(params.username, config);
                     navigate("/home");
+
                 }
             }).catch(err => console.log(err));
         }
     }
+
+    const fetchUserDetails = (username: string, config: any) => {
+        axios.get(`http://localhost:8080/api/v1/user/${username}`,
+            config,
+        ).then((response) => {
+                console.log(response);
+                if (response.status === 200) {
+                    console.log(`Fetch user response:\n ${response}`);
+                    dispatch(setFirstname(response.data.firstName));
+                    dispatch(setLastname(response.data.lastName));
+                    dispatch(setUsername(response.data.username));
+                    dispatch(setEmail(response.data.email));
+                    dispatch(setGender(response.data.gender));
+                    dispatch(setRole(response.data.role));
+                    dispatch(setDOB(response.data.dob));
+                    dispatch(setAuthenticated(true));
+                }
+            }
+        ).catch((error) => console.log(error));
+    }
+
 
     return (
         <div style={{backgroundColor: '#3A506B', padding: '10px 10px 10px 10px', minHeight: '80vh'}}>
@@ -84,7 +136,7 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
                     backgroundColor: '#1C2541',
                     paddingLeft: '50px',
                     paddingTop: '10px',
-                    borderRadius: '15px',
+                    borderRadius: '5px',
                     minHeight: '85vh'
                 }}>
                 <h1 style={{color: "white", paddingTop: '10px'}}>
@@ -103,15 +155,18 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
                             width: '25ch',
                             backgroundColor: 'rgba(58, 80, 107, 0.7)',
                             display: 'flex',
-                            borderRadius: '10px',
+                            borderRadius: '5px',
                             marginTop: 1,
                             marginBottom: 1,
                             borderColor: 'rgba(58, 80, 107, 0.7)',
                             color: '#4A5B70',
                             '&:hover': {
                                 borderColor: 'transparent',
-                                outline: '1px solid rgba(58, 80, 107, 0.7)',
-                            }
+                            },
+                            '& .MuiFormLabel-root': {
+                                color: "#858B97",
+                            },
+
                         },
                     }}>
 
@@ -123,7 +178,10 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
                                 m: 1,
                                 width: '25ch',
                                 backgroundColor: 'rgba(58, 80, 107, 0.7)',
-                                borderRadius: '10px',
+                                borderRadius: '5px',
+                                '& .MuiFormLabel-root': {
+                                    color: "#858B97",
+                                },
                             }}
                             variant="outlined">
                             <InputLabel required htmlFor="password-input">Password</InputLabel>

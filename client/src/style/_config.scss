@@ -1,7 +1,14 @@
 $link-color: #1C2541;
 $footer-background: #0B132B;
 $outline-remarks: #5BC0BE;
+$input-color:rgba(255,255,255,0.7);
 
 @font-face {
   font-family: "Open Sans";
+}
+:export{
+  linkcolor: $link-color;
+  footerbackgroundcolor: $footer-background;
+  outlineremarkscolo: $outline-remarks;
+  inputcolor: $input-color;
 }

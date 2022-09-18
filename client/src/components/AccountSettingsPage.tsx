@@ -1,30 +1,51 @@
 import React from "react";
-import {AuthenticatedUser, UpdateUserState, UserState} from "../Types";
+import {AuthenticatedUser, Gender, UserState} from "../Types";
 import {UserForm} from "./UserForm";
 import {ReturnFormButton, RedFormButton, DiscardFormButton} from "./FormButton";
 import {Navigate, useNavigate} from 'react-router-dom';
 import {validateEmail} from "../Utils";
 import axios from "axios";
-import {CustomButton} from "./CustomButton";
+import {useAppDispatch, useAppSelector} from "../store/hooks";
+import {
+    removeUser,
+    selectUser,
+    setDOB,
+    setEmail,
+    setFirstname,
+    setGender,
+    setLastname,
+} from "../feature/user/userSlice";
+import {removeToken, selectToken} from "../feature/token/tokenSlice";
 
-const redButtonTheme = {
-    "background-color": "#FFFFFF",
-    "color": "#ff0000",
-}
-
-export const AccountSettingsPage : React.FC<AuthenticatedUser> = (userState: AuthenticatedUser) => {
+export const AccountSettingsPage: React.FC<AuthenticatedUser> = (props: AuthenticatedUser) => {
     const navigate = useNavigate();
-    let userDetails : UserState;
-    if (!userState.isAuthenticated){
+    const dispatch = useAppDispatch();
+    const user = useAppSelector(selectUser);
+    const accessToken = useAppSelector(selectToken);
+    if (!user.isAuthenticated) {
         return <Navigate to={"/login"}/>
     }
-    let receiveDataFromChild =  (value: UserState)  => {
+
+    let userDetails: UserState;
+
+    let receiveDataFromChild = (value: UserState) => {
         userDetails = value;
-        console.log(value);
     };
 
+    let config: any;
+    if (accessToken) {
+        config = {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            }
+        }
+    }
+
     const updateUserData = (body: any) => {
-        let dd_mm_yyyy = body.date.toLocaleDateString();
+        console.log(`dob : ${body.dob}`);
+        console.log(`dob : ${body.dob.toLocaleDateString()}`);
+        let dd_mm_yyyy = body.dob.toLocaleDateString();
         let dob = dd_mm_yyyy.replace(/(\d+)\/(\d+)\/(\d+)/g, "$3-$2-$1");
         if (validateEmail(body.email)) {
             let payload = {
@@ -35,12 +56,18 @@ export const AccountSettingsPage : React.FC<AuthenticatedUser> = (userState: Aut
                 dob: dob,
                 gender: body.gender
             }
-            console.log(`sending data ${body}`)
+            console.log(`Payload for update : ${payload}`)
             axios.put(`http://localhost:8080/api/v1/user/updateUser/${body.username}`,
                 payload,
+                config,
             ).then((response) => {
                     console.log(response);
                     if (response.status === 200) {
+                        dispatch(setFirstname(payload.firstName))
+                        dispatch(setLastname(payload.lastName))
+                        dispatch(setEmail(payload.email))
+                        dispatch(setGender(payload.gender))
+                        dispatch(setDOB(payload.dob))
                         alert("User Updated!");
                     }
                 }
@@ -50,34 +77,40 @@ export const AccountSettingsPage : React.FC<AuthenticatedUser> = (userState: Aut
 
     const deleteUser = (body: any) => {
         axios.delete(`http://localhost:8080/api/v1/user/${body.username}`,
-            {},
+            config,
         ).then((response) => {
                 console.log(response);
                 if (response.status === 200) {
+                    dispatch(removeUser(""))
+                    dispatch(removeToken(""))
                     alert("User deleted!");
-                    navigate("/logout");
+                    navigate("/login");
                 }
             }
         ).catch((error) => console.log(error));
-
     }
 
     return (<div
         style={{backgroundColor: '#3A506B', padding: '10px 10px 10px 10px', minHeight: '85vh'}}>
         <h1 style={{color: "white", padding: '10px 0 0 30px'}}>
-            Account Settings
+            Account Settings for user {props.username}
         </h1>
         <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-            <UserForm firstName={userState.firstName} lastName={userState.lastName} date={userState.date}
-                      gender={userState.gender} username={userState.username} email={userState.email} password={""} passValuesToParent={receiveDataFromChild}/>
-            <div style={{ marginTop: '20px', marginBottom:'20px'}}>
+            <UserForm formLabelColor={"#858B97"} textFieldBackgroundColor={'rgba(28,37,65,0.3)'}
+                      firstName={props.firstName} lastName={props.lastName} dob={props.dob}
+                      gender={props.gender as Gender} username={props.username} email={props.email}
+                      password={""}
+                      passValuesToParent={receiveDataFromChild}/>
+            <div style={{marginTop: '20px', marginBottom: '20px'}}>
                 <DiscardFormButton
                     onClick={() => navigate(0)}
                 >Discard Changes</DiscardFormButton>
-                <ReturnFormButton onClick={() =>updateUserData(userDetails)}>
+                <ReturnFormButton onClick={() => updateUserData(userDetails)}>
                     Save Changes
                 </ReturnFormButton>
             </div>
+            <p style={{color: "#ff0000", backgroundColor: "#FFFFFF", borderRadius: '5px', padding: '3px'}}>Clicking on
+                'Delete account' will delete your account <strong>permanently</strong>.</p>
             <RedFormButton
                 onClick={() => deleteUser(userDetails)}
             >

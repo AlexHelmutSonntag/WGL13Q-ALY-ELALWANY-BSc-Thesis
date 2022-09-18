@@ -11,7 +11,7 @@ export enum Role{
 export type UserState = {
     firstName: string;
     lastName: string;
-    date: Date | null;
+    dob: Date | null;
     gender: Gender;
     role?: Role;
     username: string;
@@ -29,8 +29,9 @@ export type UserProps = UserState & {
 
 export type AuthenticatedUser = UpdateUserState &{
     isAuthenticated:boolean;
+    accessToken: string;
 }
 
-export type UpdateUserState = Pick<UserProps,"firstName"|"lastName"|"date"|"gender"|"role"|"username"|"email"|"password"|"passValuesToParent">
+export type UpdateUserState = Pick<UserProps,"firstName"|"lastName"|"dob"|"gender"|"role"|"username"|"email"|"password"|"passValuesToParent">
 
 export type LoginState = Pick<UserState, "email" | "password" | "validEmail" | "showPassword" | "username">;

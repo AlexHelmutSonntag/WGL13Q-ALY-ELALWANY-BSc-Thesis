@@ -18,52 +18,50 @@ import React from "react";
 import {Gender, Role, UpdateUserState, UserState} from "../Types";
 import {validateEmail, validatePasswordInput} from "../Utils";
 
+const styleColors: any = {
+    textInput: 'rgba(255,255,255,0.7)',
+    formLabel: '#858B97',
+}
 
-//TODO
-// pass flag with 'UserForm' to check if it's sign up or data update.
+interface Style {
+    textFieldBackgroundColor: string;
+    formLabelColor?: string;
+}
 
-
-export const UserForm: React.FC<UpdateUserState> = (userState: UpdateUserState,) => {
+export const UserForm: React.FC<UpdateUserState & Style> = (props) => {
     const [values, setValues] = React.useState<UserState>({
-        firstName: userState.firstName ? userState.firstName : "",
-        lastName: userState.lastName ? userState.lastName : "",
-        role: userState.role ? userState.role : Role.USER,
-        email: userState.email ? userState.email : "",
-        username: userState.username ? userState.username : "",
+        firstName: props.firstName ? props.firstName : "",
+        lastName: props.lastName ? props.lastName : "",
+        role: props.role ? props.role as Role : Role.USER,
+        email: props.email ? props.email : "",
+        username: props.username ? props.username : "",
         password: '',
         repeatedPassword: '',
         showPassword: false,
         passwordsEqual: false,
         validEmail: false,
-        date: userState.date,
-        gender: userState.gender ? userState.gender : Gender.MALE,
+        dob: props.dob,
+        gender: props.gender ? props.gender as Gender : Gender.MALE,
     });
 
-    if (userState.passValuesToParent) {
-        userState.passValuesToParent(values);
+    if (props.passValuesToParent) {
+        props.passValuesToParent(values);
     }
+
     const handleChange =
         (prop: keyof UserState) => (event: React.ChangeEvent<HTMLInputElement> | any) => {
             values.passwordsEqual = validatePasswordInput(values.password, values.repeatedPassword);
             values.validEmail = validateEmail(values.email);
             setValues({...values, [prop]: event.target.value});
-            handleDateChange(values.date);
+            handleDateChange(values.dob);
         };
 
-    // const [gender, setGender] = React.useState<Gender | string | undefined>(Gender.MALE);
-    // const handleGenderChange = (event: SelectChangeEvent) => {
-    //     setValues({
-    //         ...values
-    //     });
-    //     setGender(event.target.value as Gender);
-    // };
-
     const [date, setDate] = React.useState<Date | null>(
-        userState.date
+        props.dob
     );
 
     const handleDateChange = (newValue: Date | null) => {
-        values.date = newValue;
+        values.dob = newValue;
         setDate(newValue);
     };
 
@@ -91,16 +89,22 @@ export const UserForm: React.FC<UpdateUserState> = (userState: UpdateUserState,)
                     '& .MuiTextField-root': {
                         m: 1,
                         width: '25ch',
-                        backgroundColor: 'rgba(58, 80, 107, 0.7)',
+                        backgroundColor: props.textFieldBackgroundColor,
                         display: 'flex',
-                        borderRadius: '10px',
+                        borderRadius: '5px',
                         marginTop: 1,
                         marginBottom: 1,
                         borderColor: 'rgba(58, 80, 107, 0.7)',
                         color: '#4A5B70',
                         '&:hover': {
                             borderColor: 'transparent',
-                        }
+                        },
+                        '& .MuiFormLabel-root': {
+                            color: props.formLabelColor,
+                        },
+                        '& .MuiInputBase-input': {
+                            color: styleColors.textInput,
+                        },
                     },
 
                 }}>
@@ -121,11 +125,15 @@ export const UserForm: React.FC<UpdateUserState> = (userState: UpdateUserState,)
                         marginTop: '10px',
                     }}>
                         <LocalizationProvider dateAdapter={AdapterDateFns}>
-                            <Stack spacing={3} sx={{}}>
+                            <Stack spacing={3} sx={{
+                                '& .MuiInputBase-input': {
+                                    color: styleColors.formLabel,
+                                },
+                            }}>
                                 <DesktopDatePicker
                                     label="Birth date"
                                     inputFormat="MM/dd/yyyy"
-                                    value={values.date}
+                                    value={values.dob}
                                     onChange={handleDateChange}
                                     minDate={new Date('1940-01-01')}
                                     maxDate={new Date()}
@@ -134,8 +142,7 @@ export const UserForm: React.FC<UpdateUserState> = (userState: UpdateUserState,)
                                 />
                             </Stack>
                         </LocalizationProvider>
-                        <div
-                            style={{}}>
+                        <div>
                             <TextField
                                 id="demo-simple-select"
                                 value={values.gender}
@@ -145,14 +152,21 @@ export const UserForm: React.FC<UpdateUserState> = (userState: UpdateUserState,)
                                 onChange={handleChange('gender')}
                                 sx={{
                                     marginBottom: 1,
+                                    color: "#FFFFFF",
                                     width: '25.5ch',
                                     height: '6ch',
                                     backgroundColor: 'rgba(58, 80, 107, 0.7)',
+                                    '& .MuiFormLabel-root': {
+                                        color: styleColors.formLabel,
+                                    },
+                                    '& .MuiSelect-select': {
+                                        color: styleColors.textInput,
+                                    },
                                 }}
                             >
                                 <MenuItem value={Gender.MALE}>Male</MenuItem>
                                 <MenuItem value={Gender.FEMALE}>Female</MenuItem>
-                                <MenuItem value={Gender.FEMALE}>Other</MenuItem>
+                                <MenuItem value={Gender.OTHER}>Other</MenuItem>
                             </TextField>
                         </div>
                     </div>
@@ -173,7 +187,18 @@ export const UserForm: React.FC<UpdateUserState> = (userState: UpdateUserState,)
                         marginTop: '10px',
                     }}>
                         <FormControl
-                            sx={{m: 1, width: '25ch', backgroundColor: 'rgba(58, 80, 107, 0.7)', borderRadius: '10px',}}
+                            sx={{
+                                m: 1,
+                                width: '25ch',
+                                backgroundColor: props.textFieldBackgroundColor,
+                                borderRadius: '5px',
+                                '& .MuiFormLabel-root': {
+                                    color: styleColors.formLabel,
+                                },
+                                '& .MuiInputBase-input': {
+                                    color: styleColors.textInput,
+                                },
+                            }}
                             variant="outlined">
                             <InputLabel required htmlFor="password-input">Password</InputLabel>
                             <OutlinedInput
@@ -197,7 +222,18 @@ export const UserForm: React.FC<UpdateUserState> = (userState: UpdateUserState,)
                             />
                         </FormControl>
                         <FormControl
-                            sx={{m: 1, width: '25ch', backgroundColor: 'rgba(58, 80, 107, 0.7)', borderRadius: '10px'}}
+                            sx={{
+                                m: 1,
+                                width: '25ch',
+                                backgroundColor: props.textFieldBackgroundColor,
+                                borderRadius: '5px',
+                                '& .MuiFormLabel-root': {
+                                    color: styleColors.formLabel,
+                                },
+                                '& .MuiInputBase-input': {
+                                    color: styleColors.textInput,
+                                },
+                            }}
                             variant="outlined">
                             <InputLabel required htmlFor="repeat-password-input">Repeat Password</InputLabel>
                             <OutlinedInput
