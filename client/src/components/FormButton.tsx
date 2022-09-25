@@ -81,3 +81,25 @@ export const ReturnFormButton = styled(Button)({
         "color": "#5BC0BE",
     }
 }) as typeof Button;
+
+export const ApplyFilterButton = styled(Button)({
+    "background-color": "#5BC0BE",
+    "width": '10ch',
+    "height": '5ch',
+    "color": "#FFFFFF",
+    "font-weight": "bold",
+    "padding": 10,
+    "margin-bottom": 10,
+    "margin-top": 10,
+    "margin-left": 5,
+    "margin-right": 5,
+    "border-radius": 15,
+    "textTransform": "none",
+    '&:hover': {
+        "background-color": "#FFFFFF",
+        "color": "#5BC0BE",
+    }
+}) as typeof Button;
+
+
+

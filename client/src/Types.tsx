@@ -8,6 +8,27 @@ export enum Role{
     ADMIN = "ADMIN"
 }
 
+export enum Language{
+    GERMAN= "German",
+    ENGLISH = "English",
+    HUNGARIAN = "Hungarian",
+    SPANISH = "Spanish",
+    FRENCH = "French"
+}
+
+export enum ProficiencyLevel{
+    NATIVE ="Native",
+    ADVANCED = "Advanced",
+    FLUENT =  "Fluent",
+    BEGINNER = "Beginner"
+}
+
+export interface FilterState {
+    language?: Language;
+    level?: ProficiencyLevel;
+    capacity?: number;
+}
+
 export type UserState = {
     firstName: string;
     lastName: string;

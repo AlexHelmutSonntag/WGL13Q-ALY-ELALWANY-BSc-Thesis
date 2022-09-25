@@ -3,6 +3,7 @@ import {userSlice} from "../feature/user/userSlice";
 import storage from "redux-persist/lib/storage"
 import {persistReducer} from "redux-persist";
 import {tokenSlice} from "../feature/token/tokenSlice";
+import {roomsSlice} from "../feature/rooms/roomsSlice";
 
 
 const persistConfig = {
@@ -14,6 +15,7 @@ const persistConfig = {
 const appReducer = combineReducers({
     token: tokenSlice.reducer,
     user: userSlice.reducer,
+    rooms: roomsSlice.reducer
 })
 
 export const rootReducer = (state: any, action: any) => {

@@ -144,7 +144,7 @@ export const UserForm: React.FC<UpdateUserState & Style> = (props) => {
                         </LocalizationProvider>
                         <div>
                             <TextField
-                                id="demo-simple-select"
+                                id="select-gender"
                                 value={values.gender}
                                 label="Gender"
                                 variant={"outlined"}
