@@ -83,17 +83,11 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
                 headers: {'content-type': 'application/x-www-form-urlencoded'},
                 data: qs.stringify(params),
             }).then(response => {
-                console.log(`Login response:\n ${response}`);
+                console.log(`Login response:\n ${response.data}`);
                 if (response.data.access_token && response.data.refresh_token) {
-                    //DEPRECATED
-                    localStorage.setItem('access-token', response.data.access_token);
-                    localStorage.setItem('refresh-token', response.data.refresh_token);
-                    localStorage.setItem('isAuthenticated', "true");
-
-                    console.log(response.data.access_token);
                     dispatch(setToken(response.data.access_token));
                     dispatch(setAuthenticated(true));
-                    console.log(`From store : \n${user}`);
+                    console.log(`From store : \n${user.username}`);
                     let config = {
                         headers: {
                             'Content-Type': 'application/json',
@@ -114,7 +108,6 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
         ).then((response) => {
                 console.log(response);
                 if (response.status === 200) {
-                    console.log(`Fetch user response:\n ${response}`);
                     dispatch(setFirstname(response.data.firstName));
                     dispatch(setLastname(response.data.lastName));
                     dispatch(setUsername(response.data.username));

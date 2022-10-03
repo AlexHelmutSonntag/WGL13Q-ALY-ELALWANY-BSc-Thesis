@@ -7,12 +7,12 @@ import {ButtonProps} from "@mui/material/Button";
 const styles : any = (theme : any) => ({
     "loginButton":{
         "color": "#FFFFFF",
-        "background-color": "#9292d2",
+        "backgroundColor": "#9292d2",
         "width": '20ch',
         "height": '5ch',
     },
     "logoutButton" :{
-    "background-color": "#9292d2",
+    "backgroundColor": "#9292d2",
     "width": 60,
     "height": 20,
     }

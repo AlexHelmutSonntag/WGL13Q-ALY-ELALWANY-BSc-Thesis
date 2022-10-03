@@ -16,6 +16,7 @@ const listItems: ReactNode = contactList.map((item) => {
         </li>
     </div>
 });
+
 export const Footer: React.FC = () => {
     return (
         <div>
