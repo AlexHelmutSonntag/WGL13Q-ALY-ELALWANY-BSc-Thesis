@@ -34,7 +34,7 @@ public class SocketHandler extends TextWebSocketHandler {
     private Map<String, Room> sessionIdToRoomMap = new HashMap<>();
 
     @Override
-    public void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage textMessage) {
+    public void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage textMessage) throws IOException {
         try {
             WebSocketMessage message = objectMapper.readValue(textMessage.getPayload(), WebSocketMessage.class);
             log.debug("[ws] Message of {} type from {} received", message.getType(), message.getFrom());
@@ -99,7 +99,7 @@ public class SocketHandler extends TextWebSocketHandler {
                 }
             }
         } catch (IOException e) {
-            log.debug("An error occured: {}", e.getMessage());
+            log.info("An error occurred: {}", e.getMessage());
         }
     }
 
@@ -112,8 +112,8 @@ public class SocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) {
         sendMessage(session, new WebSocketMessage("Server", MessageType.JOIN, Boolean.toString(!sessionIdToRoomMap.isEmpty()), null, null));
+//        log.info(session.toString());
         log.info("[ws] Connection established from {} ", session.getId());
-
         sessions.add(session);
     }
 
@@ -121,6 +121,7 @@ public class SocketHandler extends TextWebSocketHandler {
         try {
             String json = objectMapper.writeValueAsString(message);
             session.sendMessage(new TextMessage(json));
+            roomServiceImpl.addRoom(new Room(1));
         } catch (IOException e) {
             log.debug("An error occurred: {}", e.getMessage());
         }

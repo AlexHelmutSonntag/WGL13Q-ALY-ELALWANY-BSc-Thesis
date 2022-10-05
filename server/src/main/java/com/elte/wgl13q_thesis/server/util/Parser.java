@@ -11,10 +11,10 @@ import java.util.Optional;
 @Slf4j
 public class Parser {
 
-    public Optional<Long> parseId(String sid) {
-        Long id = null;
+    public Optional<Integer> parseId(String sid) {
+        Integer id = null;
         try {
-            id = Long.valueOf(sid);
+            id = Integer.parseInt(sid);
         } catch (Exception e) {
             log.debug("An error occurred: {}", e.getMessage());
         }

@@ -10,16 +10,16 @@ import java.util.Objects;
 public class Room {
 
     @NotNull
-    private final Long id;
+    private final Integer id;
 
     private final Map<String, WebSocketSession> clients = new HashMap<>();
 
 
-    public Room(Long id) {
+    public Room(Integer id) {
         this.id = id;
     }
 
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 

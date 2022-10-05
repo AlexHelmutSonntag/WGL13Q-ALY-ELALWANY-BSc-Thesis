@@ -51,7 +51,6 @@ export const Tester: React.FC = () => {
         conn.send(JSON.stringify(message));
         console.log(`[${client.sessionId}] Message sent : ${message.type} ${message.data}`)
     }
-
     conn.onmessage = (msg: any) => {
         let message = JSON.parse(msg.data);
         switch (message.type) {
@@ -166,10 +165,15 @@ export const Tester: React.FC = () => {
     }
 
     const createPeerConnection = () => {
+
         myPeerConnection = new RTCPeerConnection(peerConnectionConfig);
+
         myPeerConnection.onicecandidate = handleICECandidateEvent;
+        console.log(`[${client.sessionId}] creating peer connection`);
+
         myPeerConnection.ontrack = handleTrackEvent;
     }
+
     const getMedia = (constrains: any) => {
         if (localStream) {
             localStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
@@ -203,9 +207,12 @@ export const Tester: React.FC = () => {
                 console.log(`Error opening your camera and/or microphone ${error.message}`);
                 break;
         }
-
     }
+
     const handleICECandidateEvent = (event: any) => {
+
+        console.log(`[${client.sessionId}] ICE Candidate Event ? ${event.candidate}`);
+
         if (event.candidate) {
             sendToServer({
                 from: client.sessionId,

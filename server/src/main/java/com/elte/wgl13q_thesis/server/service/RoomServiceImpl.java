@@ -39,7 +39,7 @@ public class RoomServiceImpl implements RoomService {
         if (bindingResult.hasErrors()) {
             log.info("Error with the binding {}", bindingResult.getFieldError());
         }
-        Optional<Long> optionalId = parser.parseId(sid);
+        Optional<Integer> optionalId = parser.parseId(sid);
         optionalId.ifPresent(id -> Optional.ofNullable(uuid).ifPresent(name -> addRoom(new Room(id))));
         String value = String.format("id: = %s  uuid = %s", optionalId.orElse(null), uuid);
         log.info(value);
@@ -90,7 +90,7 @@ public class RoomServiceImpl implements RoomService {
         return rooms.stream().filter(r -> r.getId().equals(parser.parseId(sid).orElse(null))).findAny();
     }
 
-    public Long getRoomId(Room room) {
+    public Integer getRoomId(Room room) {
         return room.getId();
     }
 
