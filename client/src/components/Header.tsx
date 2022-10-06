@@ -9,20 +9,19 @@ import PersonIcon from '@mui/icons-material/Person';
 import {useNavigate} from "react-router-dom";
 import {useAppDispatch, useAppSelector} from "../store/hooks";
 import {removeUser, selectUser} from "../feature/user/userSlice";
+import {removeToken} from "../feature/token/tokenSlice";
 
 interface HeaderProps {
     loggedIn: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = (props) => {
+export const Header: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const user = useAppSelector(selectUser);
     const logOutUser: any = () => {
-        localStorage.removeItem('refresh-token');
-        localStorage.removeItem('access-token');
-        localStorage.removeItem('isAuthenticated');
         dispatch({type:"USER_LOGOUT"});
+        dispatch(removeToken(""))
         dispatch(removeUser(""))
         navigate("/login");
     }

@@ -1,0 +1,13 @@
+package com.elte.wgl13q_thesis.server.service;
+
+import com.elte.wgl13q_thesis.server.model.RoomRequestBody;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.socket.WebSocketSession;
+
+public interface RoomService {
+
+    RoomRequestBody processRoomSelection(String sid, String uuid, BindingResult bindingResult);
+    RoomRequestBody displaySelectedRoom(String sid, String uuid);
+    WebSocketSession processRoomExit(String sid, String uuid);
+    RoomRequestBody requestRandomRoomNumber(String uuid);
+}

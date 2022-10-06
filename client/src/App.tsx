@@ -21,12 +21,13 @@ import {
     userSlice
 } from "./feature/user/userSlice";
 import {selectToken, tokenSlice} from "./feature/token/tokenSlice";
+import {Tester} from "./components/Tester";
 
 
 const App: React.FC = () => {
 
-    let jwtAccessToken = localStorage.getItem("access-token");
-    const [accessToken, setAccessToken] = React.useState<string>(jwtAccessToken ? jwtAccessToken : "");
+    const token = useAppSelector(selectToken)
+    const [accessToken, setAccessToken] = React.useState<string>(token ? token : "");
     const dispatch = useAppDispatch()
 
     const [userState, setUserState] = React.useState<UpdateUserState>({
@@ -43,8 +44,7 @@ const App: React.FC = () => {
     const handleLogin = (isLoggedIn: boolean, username: string, user: UpdateUserState) => {
         console.log(`App.tsx logged in : ${isLoggedIn}`)
         if (isLoggedIn) {
-            jwtAccessToken = localStorage.getItem("access-token");
-            setAccessToken(jwtAccessToken !== null ? jwtAccessToken : "");
+            setAccessToken(token !== null ? token : "");
             let config: any;
             if (accessToken !== null) {
                 config = {
@@ -70,12 +70,13 @@ const App: React.FC = () => {
             console.error("ERROR!: NOT LOGGED IN");
         }
     }
+
     const userFromStore = useAppSelector(selectUser);
 
     return (
         <Router>
             <div className="App">
-                <Header loggedIn={userFromStore.isAuthenticated}/>
+                <Header />
                 <Routes>
                     <Route path={"/signup"} element={<SignUpPage/>}/>
                     <Route path={"/login"}
@@ -99,6 +100,7 @@ const App: React.FC = () => {
                                                          gender={userFromStore.gender}
                            />}/>
                     <Route path={"/start"} element={<StartPage isAuthenticated={userFromStore.isAuthenticated}/>}/>
+                    <Route path={"/docs"} element={<Tester/>}/>
                     <Route path={"*"} element={<PageNotFound/>}/>
                 </Routes>
                 <Footer/>

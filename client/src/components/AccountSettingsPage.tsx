@@ -43,8 +43,8 @@ export const AccountSettingsPage: React.FC<AuthenticatedUser> = (props: Authenti
     }
 
     const updateUserData = (body: any) => {
-        console.log(`dob : ${body.dob}`);
-        console.log(`dob : ${body.dob.toLocaleDateString()}`);
+        // console.log(`dob : ${body.dob}`);
+        // console.log(`dob : ${body.dob.toLocaleDateString()}`);
         let dd_mm_yyyy = body.dob.toLocaleDateString();
         let dob = dd_mm_yyyy.replace(/(\d+)\/(\d+)\/(\d+)/g, "$3-$2-$1");
         if (validateEmail(body.email)) {
@@ -56,7 +56,6 @@ export const AccountSettingsPage: React.FC<AuthenticatedUser> = (props: Authenti
                 dob: dob,
                 gender: body.gender
             }
-            console.log(`Payload for update : ${payload}`)
             axios.put(`http://localhost:8080/api/v1/user/updateUser/${body.username}`,
                 payload,
                 config,

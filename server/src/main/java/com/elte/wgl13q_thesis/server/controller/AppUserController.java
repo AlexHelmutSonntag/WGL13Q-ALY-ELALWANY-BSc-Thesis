@@ -40,7 +40,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequestMapping(path = "api/v1/user")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
 @Slf4j
 public class AppUserController {
 
@@ -60,12 +60,11 @@ public class AppUserController {
 //        }
 //    }
 
-
-    @GetMapping(path="{username}")
-    public ResponseEntity<?> getUser(@PathVariable("username") String username) throws IllegalStateException{
-        try{
-            return new ResponseEntity<AppUser>(appUserService.fetchUserFromDB(username),HttpStatus.OK);
-        }catch (Exception e) {
+    @GetMapping(path = "{username}")
+    public ResponseEntity<?> getUser(@PathVariable("username") String username) throws IllegalStateException {
+        try {
+            return new ResponseEntity<AppUser>(appUserService.fetchUserFromDB(username), HttpStatus.OK);
+        } catch (Exception e) {
             return new ResponseEntity<String>("error : User with username `" + username + "` does not exist.", HttpStatus.NOT_FOUND);
         }
     }
@@ -78,6 +77,7 @@ public class AppUserController {
     @PostMapping(value = "/new")
     public ResponseEntity<String> registerNewUser(@RequestBody AppUser appUser) {
         LocalDate dob = LocalDate.parse(appUser.getDob().toString(), DateTimeFormatter.ISO_DATE);
+        String message = "";
         AppUser user = new AppUser(appUser.getUsername()
                 , appUser.getPassword()
                 , appUser.getFirstName()
@@ -86,11 +86,19 @@ public class AppUserController {
                 , dob
                 , appUser.getEmail()
                 , appUser.getGender());
-        if (appUserService.addNewUser(user)) {
-
-            return new ResponseEntity<String>("New user created!", HttpStatus.CREATED);
+        if (appUserService.isUsernameTaken(user.getUsername())) {
+            message = String.format("Username %s already taken !", user.getUsername());
+            log.info(message);
+            return new ResponseEntity<String>(message, HttpStatus.CONFLICT);
         }
-        return new ResponseEntity<String>("User failed to create!", HttpStatus.CONFLICT);
+
+        if (appUserService.isEmailTaken(user.getEmail())) {
+            message = String.format("Email %s already taken !", user.getEmail());
+            log.info(message);
+            return new ResponseEntity<String>(message, HttpStatus.CONFLICT);
+        }
+        boolean created = appUserService.addNewUser(user);
+        return new ResponseEntity<String>("New user created!", HttpStatus.CREATED);
     }
 
     @DeleteMapping(path = "{username}")

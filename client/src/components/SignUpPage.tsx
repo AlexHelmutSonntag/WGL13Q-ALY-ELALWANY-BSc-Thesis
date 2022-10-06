@@ -2,7 +2,7 @@ import React from "react";
 import {UserForm} from "./UserForm";
 import {Gender, UserState} from "../Types";
 import {ReturnFormButton} from "./FormButton";
-import {validateEmail, validatePasswordInput} from "../Utils";
+import {stringToDate, validateEmail, validateFullName, validatePasswordInput} from "../Utils";
 import axios from "axios";
 import {useNavigate} from "react-router-dom";
 
@@ -16,9 +16,18 @@ export const SignUpPage: React.FC = () => {
     };
 
     const sendSignUpRequest = (body: any) => {
-        let dd_mm_yyyy = body.dob.toLocaleDateString();
-        let dob = dd_mm_yyyy.replace(/(\d+)\/(\d+)\/(\d+)/g, "$3-$2-$1");
-        if (validateEmail(body.email) && validatePasswordInput(body.password, body.repeatedPassword)) {
+        let dob = stringToDate(body.dob.toLocaleDateString());
+        if (!validateFullName(body.firstName, body.lastName)) {
+            alert('The first and last names need to start with an uppercase letter');
+        }
+        if (!validateEmail(body.email) && !validatePasswordInput(body.password, body.repeatedPassword)) {
+            alert('The email you inputted is invalid and the passwords do not match!')
+        } else if (!validatePasswordInput(body.password, body.repeatedPassword)) {
+            alert('The passwords you inputted do not match!')
+        } else if (!validateEmail(body.email)) {
+            alert('The email you inputted is invalid!')
+        }
+        if (validateFullName(body.firstName, body.lastName) && validateEmail(body.email) && validatePasswordInput(body.password, body.repeatedPassword)) {
             let payload = {
                 firstName: body.firstName,
                 lastName: body.lastName,
@@ -32,13 +41,18 @@ export const SignUpPage: React.FC = () => {
             axios.post('http://localhost:8080/api/v1/user/new',
                 payload,
             ).then((response) => {
-                    console.log(response);
+                    console.log(response.data);
                     if (response.status === 201) {
                         alert("User created, try your credentials..");
                         navigate("/login");
+                    } else {
+                        alert("Server error!");
                     }
                 }
-            ).catch((error) => console.log(error));
+            ).catch((error) => {
+                console.log(error)
+                alert(error.response.data);
+            });
 
         }
     }
@@ -49,7 +63,8 @@ export const SignUpPage: React.FC = () => {
                 Signup
             </h1>
             <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                <UserForm formLabelColor={"#858B97"} textFieldBackgroundColor={"#3A506BB2"} firstName={""} lastName={""} dob={new Date("2000-01-01")}
+                <UserForm formLabelColor={"#858B97"} textFieldBackgroundColor={"#3A506BB2"} firstName={""} lastName={""}
+                          dob={new Date("2000-01-01")}
                           gender={Gender.MALE} username={""} email={""} password={""}
                           passValuesToParent={receiveDataFromChild}/>
                 <div style={{marginTop: "10px"}} id={"form-signup-button"}>

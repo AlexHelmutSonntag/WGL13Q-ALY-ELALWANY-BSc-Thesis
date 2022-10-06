@@ -31,13 +31,13 @@ public class AppUserService implements UserDetailsService {
     }
 
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        AppUser user = appUserRepository.findUserByUsername(username);
-        if (user == null) {
+        Optional<AppUser> userOptional = appUserRepository.findUserByUsername(username);
+        if (userOptional.isEmpty()) {
             log.error("User {} not found in the database", username);
             throw new UsernameNotFoundException("User {} not found in the database");
-        } else {
-            log.info("User {} found in the database", username);
         }
+        AppUser user = userOptional.get();
+        log.info("User {} found in the database", username);
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority(user.getRole().name()));
         log.info("User {} authorities :  {} ", username, authorities);
@@ -46,14 +46,14 @@ public class AppUserService implements UserDetailsService {
     }
 
     public UserDetails loadUserAndCheckPassword(String username, String password) throws ServletException {
-        AppUser user = appUserRepository.findUserByUsername(username);
-        if (user == null) {
+        Optional<AppUser> userOptional = appUserRepository.findUserByUsername(username);
+        if (userOptional.isEmpty()) {
             log.error("User {} not found in the database", username);
             throw new UsernameNotFoundException("User {} not found in the database");
-        } else {
-            log.info("User {} found in the database", username);
-            log.info("Fetching details for user");
         }
+        AppUser user = userOptional.get();
+        log.info("User {} found in the database", username);
+        log.info("Fetching details for user");
         String passwordFromDb = appUserRepository.findPasswordByUsername(username);
         if (!passwordFromDb.equals(passwordEncoder.encode(password))) {
             log.error("User {} password incorrect", username);
@@ -74,15 +74,20 @@ public class AppUserService implements UserDetailsService {
 
     public AppUser fetchUserFromDB(String username) throws IllegalStateException {
         try {
-            return appUserRepository.findUserByUsername(username);
+            Optional<AppUser> userOptional = appUserRepository.findUserByUsername(username);
+            if (userOptional.isPresent()) {
+                return userOptional.get();
+            }
         } catch (IllegalStateException e) {
             throw new IllegalStateException("User with username " + username + " does not exist");
         }
+        return null;
     }
 
     public boolean addNewUser(AppUser appUser) {
-        if (isEmailTaken(appUser.getEmail())) {
-            throw new IllegalStateException("Email taken!");
+        if (isEmailTaken(appUser.getEmail()) || isUsernameTaken(appUser.getUsername())) {
+//            throw new IllegalStateException("Email taken!");
+            return false;
         }
         AppUser user = new AppUser();
         user.setEmail(appUser.getEmail());
@@ -100,9 +105,14 @@ public class AppUserService implements UserDetailsService {
 
     public void deleteUser(String username) {
         try {
-            AppUser user = appUserRepository.findUserByUsername(username);
-            deleteUser(user.getId());
-            log.info("User with id  {} deleted", user.getId());
+            Optional<AppUser> userOptional = appUserRepository.findUserByUsername(username);
+            if (userOptional.isPresent()) {
+                AppUser user = userOptional.get();
+                deleteUser(user.getId());
+                log.info("User with username  {} deleted", user.getId());
+            } else {
+                log.info("User with username  {} not present", username);
+            }
         } catch (Exception exception) {
             throw new IllegalStateException("User with username " + username + " does not exist");
         }
@@ -196,11 +206,14 @@ public class AppUserService implements UserDetailsService {
 //        appUser.getRoles().remove(role);
 //    }
 
-
     public boolean isEmailTaken(String email) {
         Optional<AppUser> userOptional = appUserRepository.findUserByEmail(email);
         return userOptional.isPresent();
     }
 
+    public boolean isUsernameTaken(String username) {
+        Optional<AppUser> userOptional = appUserRepository.findUserByUsername(username);
+        return userOptional.isPresent();
+    }
 
 }
