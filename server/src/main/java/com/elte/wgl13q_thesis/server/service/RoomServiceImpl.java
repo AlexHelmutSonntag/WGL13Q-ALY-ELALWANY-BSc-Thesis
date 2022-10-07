@@ -1,5 +1,7 @@
 package com.elte.wgl13q_thesis.server.service;
 
+import com.elte.wgl13q_thesis.server.model.Language;
+import com.elte.wgl13q_thesis.server.model.ProficiencyLevel;
 import com.elte.wgl13q_thesis.server.model.Room;
 import com.elte.wgl13q_thesis.server.model.RoomRequestBody;
 import com.elte.wgl13q_thesis.server.util.Parser;
@@ -7,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.util.*;
@@ -18,6 +21,7 @@ public class RoomServiceImpl implements RoomService {
     private final Parser parser;
     // repository substitution
     private final Set<Room> rooms = new TreeSet<>(Comparator.comparing(Room::getId));
+//    private final Set<Room> rooms = new HashSet<>();
 
     @Autowired
     public RoomServiceImpl(final Parser parser) {
@@ -25,26 +29,43 @@ public class RoomServiceImpl implements RoomService {
     }
 
     public Set<Room> getRooms() {
-        final TreeSet<Room> defensiveCopy = new TreeSet<>(Comparator.comparing(Room::getId));
+        final Set<Room> defensiveCopy = new TreeSet<>(Comparator.comparing(Room::getId));
         defensiveCopy.addAll(rooms);
+        log.info("getting rooms : " + defensiveCopy);
         return defensiveCopy;
     }
 
-    public boolean addRoom(final Room room) {
-        return rooms.add(room);
+    public void addRoom(final Room room) {
+        rooms.add(room);
     }
 
     @Override
-    public RoomRequestBody processRoomSelection(String sid, String uuid, BindingResult bindingResult) {
+    public RoomRequestBody processRoomSelection(RoomRequestBody requestBody, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             log.info("Error with the binding {}", bindingResult.getFieldError());
         }
-        Optional<Integer> optionalId = parser.parseId(sid);
-        optionalId.ifPresent(id -> Optional.ofNullable(uuid).ifPresent(name -> addRoom(new Room(id))));
-        String value = String.format("id: = %s  uuid = %s", optionalId.orElse(null), uuid);
-        log.info(value);
-        assert optionalId.orElse(null) != null;
-        return new RoomRequestBody(optionalId.orElse(null).toString(), uuid);
+
+        //sessionId == room id
+        String roomId = requestBody.getId();
+        String uuid = requestBody.getUuid();
+        ProficiencyLevel level = requestBody.getProficiencyLevel();
+        Language language = requestBody.getLanguage();
+        log.info("processRoomSelection, room : "+roomId);
+        // userId == id
+        Optional<Room> roomFound = findRoomByStringId(roomId);
+
+        if (roomFound.isEmpty()) {
+            Optional<Integer> optionalId = parser.parseId(roomId);
+            optionalId.ifPresent(id -> Optional.ofNullable(uuid).ifPresent(userId -> addRoom(new Room(id, level, language))));
+            String value = String.format("id : %s , uuid : %s , level : %s , language : %s", optionalId.orElse(null), uuid, level, language);
+            log.info("Room created  : " + value);
+            assert optionalId.orElse(null) != null;
+            return new RoomRequestBody(optionalId.orElse(null).toString(), uuid, level, language);
+        } else {
+            return null;
+        }
+
+
     }
 
     @Override
@@ -76,12 +97,15 @@ public class RoomServiceImpl implements RoomService {
         return null;
     }
 
+    public WebSocketSession removeClientByName(final Room room, final String name) {
+        return room.getClients().remove(name);
+    }
+
     @Override
     public RoomRequestBody requestRandomRoomNumber(String uuid) {
         Long rand = this.randomValue();
         log.info("uuid : {}", uuid);
         log.info("requestRandomRoomNumber : {}", rand);
-
         return new RoomRequestBody(rand.toString(), uuid);
     }
 
@@ -100,13 +124,10 @@ public class RoomServiceImpl implements RoomService {
                 .orElse(Collections.emptyMap());
     }
 
-    public WebSocketSession addClient(final Room room, final String name, final WebSocketSession session) {
-        return room.getClients().put(name, session);
+    public void addClient(final Room room, final String name, final WebSocketSession session) {
+        room.getClients().put(name, session);
     }
 
-    public WebSocketSession removeClientByName(final Room room, final String name) {
-        return room.getClients().remove(name);
-    }
 
     private Long randomValue() {
         return ThreadLocalRandom.current().nextLong(0, 100);
