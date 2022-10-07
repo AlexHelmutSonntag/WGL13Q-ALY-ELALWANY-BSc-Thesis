@@ -16,7 +16,4 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     @Query("SELECT u FROM AppUser u WHERE u.username = ?1")
     Optional <AppUser> findUserByUsername(String username);
 
-    @Query("SELECT u.password FROM AppUser u WHERE u.username = ?1")
-    String findPasswordByUsername(String username);
-
 }

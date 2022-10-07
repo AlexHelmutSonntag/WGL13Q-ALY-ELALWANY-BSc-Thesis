@@ -5,10 +5,12 @@ import com.elte.wgl13q_thesis.server.model.AppUserRole;
 import com.elte.wgl13q_thesis.server.repo.AppUserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,12 +24,21 @@ public class AppUserService implements UserDetailsService {
 
     private final AppUserRepository appUserRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+//    @Autowired
+//    private PasswordEncoder passwordEncoder;
+
+    @Bean
+    private PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Autowired // dependency injection
     public AppUserService(AppUserRepository appUserRepository) {
         this.appUserRepository = appUserRepository;
+    }
+
+    public List<AppUser> getUsers() {
+        return appUserRepository.findAll();
     }
 
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -45,31 +56,10 @@ public class AppUserService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), authorities);
     }
 
-    public UserDetails loadUserAndCheckPassword(String username, String password) throws ServletException {
-        Optional<AppUser> userOptional = appUserRepository.findUserByUsername(username);
-        if (userOptional.isEmpty()) {
-            log.error("User {} not found in the database", username);
-            throw new UsernameNotFoundException("User {} not found in the database");
-        }
-        AppUser user = userOptional.get();
-        log.info("User {} found in the database", username);
-        log.info("Fetching details for user");
-        String passwordFromDb = appUserRepository.findPasswordByUsername(username);
-        if (!passwordFromDb.equals(passwordEncoder.encode(password))) {
-            log.error("User {} password incorrect", username);
-            throw new ServletException("User {} not authenticated");
-        }
-        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority(user.getRole().name()));
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), authorities);
-    }
-
-    public List<AppUser> getUsers() {
-        return appUserRepository.findAll();
-    }
 
     public AppUser fetchUserFromDB(Long userId) {
-        return appUserRepository.findById(userId).orElseThrow(() -> new IllegalStateException("User with id " + userId + " does not exist"));
+        return appUserRepository.findById(userId).orElse((null));
+//        -> new IllegalStateException("User with id " + userId + " does not exist"));
     }
 
     public AppUser fetchUserFromDB(String username) throws IllegalStateException {
@@ -89,17 +79,8 @@ public class AppUserService implements UserDetailsService {
 //            throw new IllegalStateException("Email taken!");
             return false;
         }
-        AppUser user = new AppUser();
-        user.setEmail(appUser.getEmail());
-        user.setUsername(appUser.getUsername());
-        user.setPassword(passwordEncoder.encode(appUser.getPassword()));
-        user.setId(appUser.getId());
-        user.setRole(appUser.getRole());
-        user.setFirstName(appUser.getFirstName());
-        user.setLastName(appUser.getLastName());
-        user.setDob(appUser.getDob());
-        user.setGender(appUser.getGender());
-        appUserRepository.save(user);
+        appUser.setPassword(passwordEncoder().encode(appUser.getPassword()));
+        appUserRepository.save(appUser);
         return true;
     }
 
@@ -109,7 +90,12 @@ public class AppUserService implements UserDetailsService {
             if (userOptional.isPresent()) {
                 AppUser user = userOptional.get();
                 deleteUser(user.getId());
-                log.info("User with username  {} deleted", user.getId());
+//                Long userId = user.getId();
+//                boolean exists = appUserRepository.existsById(userId);
+//                if (exists) {
+//                    appUserRepository.deleteById(userId);
+//                    log.info("User with username  {} deleted", user.getUsername());
+//                }
             } else {
                 log.info("User with username  {} not present", username);
             }
@@ -162,7 +148,7 @@ public class AppUserService implements UserDetailsService {
             }
             if (givenAppUser.getPassword() != null && givenAppUser.getPassword().length() > 6) {
                 log.info("{} is getting a new password", appUser.getUsername());
-                appUser.setPassword(passwordEncoder.encode(givenAppUser.getPassword()));
+                appUser.setPassword(passwordEncoder().encode(givenAppUser.getPassword()));
             }
             appUserRepository.save(appUser);
         } catch (Exception e) {
