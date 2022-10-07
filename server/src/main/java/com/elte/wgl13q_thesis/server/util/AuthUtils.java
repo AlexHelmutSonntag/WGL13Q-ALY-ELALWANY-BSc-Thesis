@@ -29,20 +29,20 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class AuthUtils {
 
 
-    public static void authErrorLogger(HttpServletResponse response,HttpStatus status, Exception exception) throws Exception {
+    public static void authErrorLogger(HttpServletResponse response, HttpStatus status, Exception exception) throws Exception {
         log.error("Error in : {}", exception.getMessage());
-        setHeaderAndStatus(response,status,"error",exception.getMessage());
-        AuthUtils.putMessageInResponse(response,"error_message",exception.getMessage());
+        setHeaderAndStatus(response, status, "error", exception.getMessage());
+        AuthUtils.putMessageInResponse(response, "error_message", exception.getMessage());
     }
 
-    public static void setHeaderAndStatus(HttpServletResponse response,HttpStatus status,String key,String message){
+    public static void setHeaderAndStatus(HttpServletResponse response, HttpStatus status, String key, String message) {
         response.setHeader(key, message);
         response.setStatus(status.value());
     }
 
-    public static void putMessageInResponse(HttpServletResponse response,String key, String message) throws IOException {
+    public static void putMessageInResponse(HttpServletResponse response, String key, String message) throws IOException {
         Map<String, String> responseData = new HashMap<>();
-        responseData.put(key,message);
+        responseData.put(key, message);
         response.setContentType(APPLICATION_JSON_VALUE);
         new ObjectMapper().writeValue(response.getOutputStream(), responseData);
     }
@@ -58,19 +58,20 @@ public class AuthUtils {
         }
     }
 
-    public static void setAccessAndRefreshTokensInHeader(HttpServletResponse response,String accessToken,String refreshToken){
+    public static void setAccessAndRefreshTokensInHeader(HttpServletResponse response, String accessToken, String refreshToken) {
         response.setHeader("access_token", accessToken);
         response.setHeader("refresh_token", refreshToken);
     }
-    public static void putAccessAndRefreshTokensInBody(HttpServletResponse response,String accessToken,String refreshToken) throws IOException {
-        Map<String,String> tokens = new HashMap<>();
+
+    public static void putAccessAndRefreshTokensInBody(HttpServletResponse response, String accessToken, String refreshToken) throws IOException {
+        Map<String, String> tokens = new HashMap<>();
         tokens.put("access_token", accessToken);
         tokens.put("refresh_token", refreshToken);
         response.setContentType(APPLICATION_JSON_VALUE);
-        new ObjectMapper().writeValue(response.getOutputStream(),tokens);
+        new ObjectMapper().writeValue(response.getOutputStream(), tokens);
     }
 
-    public static void createAuthToken(HttpServletRequest request, HttpServletResponse response,Authentication authentication) throws IOException {
+    public static void createAuthToken(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         User user = (User) authentication.getPrincipal();
         Algorithm algorithm = Algorithm.HMAC256("secret".getBytes());
         String accessToken = JWT.create()
@@ -84,7 +85,7 @@ public class AuthUtils {
                 .withExpiresAt(new Date(System.currentTimeMillis() + 120 * 60 * 1000))
                 .withIssuer(request.getRequestURL().toString())
                 .sign(algorithm);
-        setAccessAndRefreshTokensInHeader(response,accessToken,refreshToken);
-        putAccessAndRefreshTokensInBody(response,accessToken,refreshToken);
+        setAccessAndRefreshTokensInHeader(response, accessToken, refreshToken);
+        putAccessAndRefreshTokensInBody(response, accessToken, refreshToken);
     }
 }

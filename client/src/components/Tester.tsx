@@ -49,10 +49,11 @@ export const Tester: React.FC = () => {
             console.log("socket not open!");
         }
         conn.send(JSON.stringify(message));
-        console.log(`[${client.sessionId}] Message sent : ${message.type} ${message.data}`)
+        console.log(`[${client.sessionId}] Message sent : ${message.payload.type} ${message.payload.data} `)
     }
     conn.onmessage = (msg: any) => {
         let message = JSON.parse(msg.data);
+        console.log(`[${client.sessionId}]  {from : ${message.from}, data : ${message.data}, language : ${message.language} , proficiencyLevel : ${message.proficiencyLevel}, roomNumber: ${message.roomNumber}}  `);
         switch (message.type) {
             case MessageType.TEXT:
                 console.log(`Text message from ${message.from} message data : ${message.data}`);
@@ -86,11 +87,15 @@ export const Tester: React.FC = () => {
         /*
         Send a message to the server to join the selected room with WebSocket
          */
-
+        let level = ProficiencyLevel.NATIVE;
+        let language = Language.GERMAN;
         sendToServer({
             from: client.sessionId,
             type: MessageType.JOIN,
-            data: roomNumber
+            data: roomNumber,
+            proficiencyLevel: level,
+            language: language,
+            roomNumber: roomNumber
         })
     }
 
@@ -114,6 +119,7 @@ export const Tester: React.FC = () => {
             type: MessageType.LEAVE,
             data: roomNumber,
         })
+
 
         if (myPeerConnection) {
             console.log(`[${client.sessionId}] Close the RTCPeerConnection`);
@@ -219,6 +225,7 @@ export const Tester: React.FC = () => {
                 type: MessageType.ICE,
                 candidate: event.candidate
             });
+
             console.log(`[${client.sessionId}] ICE Candidate Event : ICE Candidate sent ${event.candidate}`);
         }
     }
@@ -237,6 +244,7 @@ export const Tester: React.FC = () => {
                 type: MessageType.OFFER,
                 sdp: myPeerConnection.localDescription
             })
+
             console.log(`[${client.sessionId}] Negotiation needed event : SDP offer sent`)
 
         }).catch((error: any) => {
@@ -248,6 +256,8 @@ export const Tester: React.FC = () => {
         console.log(`Accepting OFFER message ${message}`);
 
         let sessionDescription = new RTCSessionDescription(message.sdp);
+
+
         if (sessionDescription != null && message.sdp != null) {
             console.log(`[${client.sessionId}]  RTC signalling state :  ${myPeerConnection.signalingState}`);
             myPeerConnection.setRemoteDescription(sessionDescription).then(() => {
@@ -288,6 +298,7 @@ export const Tester: React.FC = () => {
                     type: MessageType.ANSWER,
                     sdp: myPeerConnection.localDescription
                 });
+
             }).catch(handleErrorMessage);
 
         }
@@ -300,10 +311,12 @@ export const Tester: React.FC = () => {
     const handleAnswerMessage = (message: any) => {
         console.log(`[${client.sessionId}] Received  message ${message.data} from ${message.from}`);
         myPeerConnection.setRemoteDescription(message.sdp).catch(handleErrorMessage);
+        // myPeerConnection.setRemoteDescription(message.payload.sdp).catch(handleErrorMessage);
     }
 
     const handleNewICECandidateMessage = (message: any) => {
         let candidate = new RTCIceCandidate(message.candidate);
+        // let candidate = new RTCIceCandidate(message.payload.candidate);
         console.log(`[${client.sessionId}] Adding received ICE candidate ${JSON.stringify(candidate)}`)
         myPeerConnection.addIceCandidate(candidate).catch(handleErrorMessage);
     }
@@ -431,6 +444,7 @@ export const Tester: React.FC = () => {
 
     return <div>
         <h1>Tester</h1>
+        <h2>Client : {client.sessionId}</h2>
         {/*<button onClick={() => getRoom({roomID: 3})}>Room 3</button>*/}
         {/*<button onClick={() => addRoomToStore()}>Create room</button>*/}
         {/*<button onClick={() => getRooms()}>Get rooms</button>*/}

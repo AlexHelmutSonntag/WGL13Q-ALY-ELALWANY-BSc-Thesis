@@ -12,12 +12,30 @@ public class Room {
     @NotNull
     private final Integer id;
 
-    private final Map<String, WebSocketSession> clients = new HashMap<>();
+    private final Language language;
 
+    private final ProficiencyLevel proficiencyLevel;
+    private final Map<String, WebSocketSession> clients = new HashMap<>();
 
     public Room(Integer id) {
         this.id = id;
+        language = null;
+        proficiencyLevel = null;
     }
+    public Room(Integer id,ProficiencyLevel proficiencyLevel,Language language) {
+        this.id = id;
+        this.language = language;
+        this.proficiencyLevel = proficiencyLevel;
+    }
+
+    public Language getLanguage() {
+        return language;
+    }
+
+    public ProficiencyLevel getProficiencyLevel() {
+        return proficiencyLevel;
+    }
+
 
     public Integer getId() {
         return id;
@@ -26,6 +44,7 @@ public class Room {
     public Map<String, WebSocketSession> getClients() {
         return clients;
     }
+
 
     @Override
     public boolean equals(final Object o) {
@@ -41,4 +60,13 @@ public class Room {
         return Objects.hash(getId(), getClients());
     }
 
+    @Override
+    public String toString() {
+        return "Room{" +
+                "id=" + id +
+                ", language='" + language + '\'' +
+                ", proficiencyLevel='" + proficiencyLevel + '\'' +
+                ", clients=" + clients +
+                '}';
+    }
 }

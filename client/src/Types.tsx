@@ -10,18 +10,18 @@ export enum Role {
 }
 
 export enum Language {
-    GERMAN = "German",
-    ENGLISH = "English",
-    HUNGARIAN = "Hungarian",
-    SPANISH = "Spanish",
-    FRENCH = "French"
+    GERMAN = "GERMAN",
+    ENGLISH = "ENGLISH",
+    HUNGARIAN = "HUNGARIAN",
+    SPANISH = "SPANISH",
+    FRENCH = "FRENCH"
 }
 
 export enum ProficiencyLevel {
-    NATIVE = "Native",
-    ADVANCED = "Advanced",
-    FLUENT = "Fluent",
-    BEGINNER = "Beginner"
+    NATIVE = "NATIVE",
+    ADVANCED = "ADVANCED",
+    FLUENT = "FLUENT",
+    BEGINNER = "BEGINNER"
 }
 
 export interface RoomState {

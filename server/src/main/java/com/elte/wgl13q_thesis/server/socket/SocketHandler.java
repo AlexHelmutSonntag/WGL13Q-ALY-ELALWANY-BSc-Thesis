@@ -1,9 +1,9 @@
 package com.elte.wgl13q_thesis.server.socket;
 
-import com.elte.wgl13q_thesis.server.model.MessageType;
-import com.elte.wgl13q_thesis.server.model.Room;
-import com.elte.wgl13q_thesis.server.model.WebSocketMessage;
+import com.elte.wgl13q_thesis.server.model.*;
 import com.elte.wgl13q_thesis.server.service.RoomServiceImpl;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,23 +28,34 @@ public class SocketHandler extends TextWebSocketHandler {
     @Autowired
     private RoomServiceImpl roomServiceImpl;
 
+    //    @JsonIgnore
     private final ObjectMapper objectMapper = new ObjectMapper();
 
 
     private Map<String, Room> sessionIdToRoomMap = new HashMap<>();
 
-    @Override
-    public void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage textMessage) throws IOException {
+    //    @Override
+    public void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage textMessage) {
         try {
+
             WebSocketMessage message = objectMapper.readValue(textMessage.getPayload(), WebSocketMessage.class);
-            log.debug("[ws] Message of {} type from {} received", message.getType(), message.getFrom());
-            String userName = message.getFrom(); // origin of the message
-            String data = message.getData(); // payload
+            log.info("[ws] Message of {} type from {} received", message.getType(), message.getFrom());
+//            String userName = message.getFrom(); // origin of the message
+            String userName = message.getFrom();
+//            String data = message.getData(); // payload
+            String data = message.getData();
+            log.info("data: " + data);
+            String roomNumberString = Optional.ofNullable(message.getRoomNumber()).orElse("");
+            ProficiencyLevel proficiencyLevel = Optional.ofNullable(message.getProficiencyLevel()).orElse(ProficiencyLevel.NATIVE);
+            Language language = Optional.ofNullable(message.getLanguage()).orElse(Language.GERMAN);
+            log.info("language: " + language);
+            log.info("level: " + proficiencyLevel);
+            log.info("roomNumber: " + roomNumberString);
 
             Room room;
             switch (message.getType()) {
                 // text message from client has been received
-                case TEXT -> log.debug("[ws] Text message: {}", message.getData());
+                case TEXT -> log.info("[ws] Text message: {}", message.getData());
                 // message.data is the text sent by client
                 // process text message if needed
 
@@ -52,14 +63,16 @@ public class SocketHandler extends TextWebSocketHandler {
                 case OFFER, ANSWER, ICE -> {
                     Object candidate = message.getCandidate();
                     Object sdp = message.getSdp();
-                    log.debug("[ws] Signal: {}",
+                    log.info("[ws] Signal: {}",
                             candidate != null
                                     ? candidate.toString().substring(0, 64)
                                     : sdp.toString().substring(0, 64));
+                    log.info("Session : " + session.getId());
                     Room existingRoom = sessionIdToRoomMap.get(session.getId());
                     if (existingRoom != null) {
                         Map<String, WebSocketSession> clients = roomServiceImpl.getClients(existingRoom);
                         for (Map.Entry<String, WebSocketSession> client : clients.entrySet()) {
+                            log.info("Room : " + existingRoom.getId() + " Client key : " + client.getKey());
                             if (!client.getKey().equals(userName)) {
                                 sendMessage(client.getValue(),
                                         new WebSocketMessage(
@@ -73,18 +86,28 @@ public class SocketHandler extends TextWebSocketHandler {
                     }
                 }
 
-                // identify user and their opponent
+                // identify user and their peer
                 case JOIN -> {
-                    // message.data contains connected room id
-                    log.debug("[ws] {} has joined Room: #{}", userName, message.getData());
-                    room = roomServiceImpl.findRoomByStringId(data)
+                    // message.getRoomNumber() contains connected room id
+                    int roomNumber = 1;
+                    if (message.getRoomNumber() != null && message.getLanguage() != null && message.getProficiencyLevel() != null) {
+                        roomNumber = Integer.parseInt(message.getRoomNumber());
+                        language = message.getLanguage();
+                        roomServiceImpl.addRoom(new Room(roomNumber, proficiencyLevel, language));
+                    } else {
+                        roomServiceImpl.addRoom(new Room(roomNumber));
+                    }
+
+                    log.info("[ws] {} has joined Room: #{}", userName, message.getRoomNumber());
+                    room = roomServiceImpl.findRoomByStringId(roomNumberString)
                             .orElseThrow(() -> new IOException("Invalid room number received!"));
                     roomServiceImpl.addClient(room, userName, session);
                     sessionIdToRoomMap.put(session.getId(), room);
                 }
+
                 case LEAVE -> {
-                    // message data contains connected room id
-                    log.debug("[ws] {} is going to leave Room: #{}", userName, message.getData());
+                    // message.getRoomNumber() contains connected room id
+                    log.info("[ws] {} is going to leave Room: #{}", userName, message.getData());
                     // room id taken by session id
                     room = sessionIdToRoomMap.get(session.getId());
                     // remove the client which leaves from the Room clients list
@@ -95,24 +118,33 @@ public class SocketHandler extends TextWebSocketHandler {
                     client.ifPresent(c -> roomServiceImpl.removeClientByName(room, c));
                 }
                 default -> {
-                    log.debug("[ws] Type of the received message {} is undefined!", message.getType());
+                    log.info("[ws] Type of the received message {} is undefined!", message.getType());
                 }
             }
         } catch (IOException e) {
-            log.info("An error occurred: {}", e.getMessage());
+            log.info("An error occurred in SocketHandler.handleTextMessage : {}", e.getMessage());
         }
     }
 
-    @Override
-    public void afterConnectionClosed(final WebSocketSession session,@NonNull final CloseStatus status) {
+    //    @Override
+    public void afterConnectionClosed(final WebSocketSession session, @NonNull final CloseStatus status) {
         log.debug("[ws] Session has been closed with status {}", status);
         sessionIdToRoomMap.remove(session.getId());
     }
 
-    @Override
+    //    @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) {
-        sendMessage(session, new WebSocketMessage("Server", MessageType.JOIN, Boolean.toString(!sessionIdToRoomMap.isEmpty()), null, null));
-//        log.info(session.toString());
+        sendMessage(session, new WebSocketMessage("Server",
+                MessageType.JOIN,
+                Boolean.toString(!sessionIdToRoomMap.isEmpty()),
+                null,
+                null,
+                null,
+                null,
+                null));
+//        sendMessage(session, new WebSocketMessage("Server", MessageType.JOIN, Boolean.toString(!sessionIdToRoomMap.isEmpty()), null, null));
+        log.info(session.toString());
+        log.info(session.getId());
         log.info("[ws] Connection established from {} ", session.getId());
         sessions.add(session);
     }
@@ -121,7 +153,7 @@ public class SocketHandler extends TextWebSocketHandler {
         try {
             String json = objectMapper.writeValueAsString(message);
             session.sendMessage(new TextMessage(json));
-            roomServiceImpl.addRoom(new Room(1));
+            log.info(json);
         } catch (IOException e) {
             log.debug("An error occurred: {}", e.getMessage());
         }

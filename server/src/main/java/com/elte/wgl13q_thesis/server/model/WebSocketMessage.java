@@ -8,6 +8,33 @@ public class WebSocketMessage {
     private String data;
     private Object candidate;
     private Object sdp;
+    private Language language;
+    private ProficiencyLevel proficiencyLevel;
+    private String roomNumber;
+
+    public String getRoomNumber() {
+        return roomNumber;
+    }
+
+    public void setRoomNumber(String roomNumber) {
+        this.roomNumber = roomNumber;
+    }
+
+    public Language getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(Language language) {
+        this.language = language;
+    }
+
+    public ProficiencyLevel getProficiencyLevel() {
+        return proficiencyLevel;
+    }
+
+    public void setProficiencyLevel(ProficiencyLevel proficiencyLevel) {
+        this.proficiencyLevel = proficiencyLevel;
+    }
 
     public WebSocketMessage() {
 
@@ -23,6 +50,17 @@ public class WebSocketMessage {
         this.data = data;
         this.sdp = sdp;
         this.type = type;
+    }
+
+    public WebSocketMessage(String from, MessageType type, String data, Object candidate, Object sdp, Language language, ProficiencyLevel proficiencyLevel, String roomNumber) {
+        this.from = from;
+        this.type = type;
+        this.data = data;
+        this.candidate = candidate;
+        this.sdp = sdp;
+        this.language = language;
+        this.proficiencyLevel = proficiencyLevel;
+        this.roomNumber = roomNumber;
     }
 
     public String getFrom() {
@@ -70,27 +108,29 @@ public class WebSocketMessage {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof WebSocketMessage that)) return false;
-        return Objects.equals(this.from, that.getFrom()) &&
-                Objects.equals(this.type, that.getType()) &&
-                Objects.equals(this.data, that.getData()) &&
-                Objects.equals(this.candidate, that.getCandidate()) &&
-                Objects.equals(this.sdp, that.getSdp());
+        return Objects.equals(this.getFrom(), that.getFrom()) &&
+                Objects.equals(this.getType(), that.getType()) &&
+                Objects.equals(this.getData(), that.getData()) &&
+                Objects.equals(this.getCandidate(), that.getCandidate()) &&
+                Objects.equals(this.getSdp(), that.getSdp());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.from, this.type, this.data, this.candidate, this.sdp);
+        return Objects.hash(this.getFrom(), this.getType(), this.getData(), this.getCandidate(), this.getSdp());
     }
 
     @Override
     public String toString() {
         return "WebSocketMessage{" +
                 "from='" + from + '\'' +
-                ", type='" + type + '\'' +
+                ", type=" + type +
                 ", data='" + data + '\'' +
                 ", candidate=" + candidate +
                 ", sdp=" + sdp +
+                ", language=" + language +
+                ", proficiencyLevel=" + proficiencyLevel +
+                ", roomNumber='" + roomNumber + '\'' +
                 '}';
     }
-
 }
