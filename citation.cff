@@ -1,0 +1,16 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  Peer-to-Peer Video transmission web app using
+  WebRTC
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Aly Elalwany
+    name-particle: Aly
+    family-names: Elalwany
+    email: alyelalwany@gmail.com
