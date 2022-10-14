@@ -10,7 +10,6 @@ message: >-
   metadata from this file.
 type: software
 authors:
-  - given-names: Aly Elalwany
-    name-particle: Aly
+  - given-names: Aly
     family-names: Elalwany
     email: alyelalwany@gmail.com
