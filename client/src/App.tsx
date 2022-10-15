@@ -99,7 +99,7 @@ const App: React.FC = () => {
                                                          email={userFromStore.email} role={userFromStore.role}
                                                          gender={userFromStore.gender}
                            />}/>
-                    <Route path={"/start"} element={<StartPage isAuthenticated={userFromStore.isAuthenticated}/>}/>
+                    <Route path={"/start"} element={<StartPage />}/>
                     <Route path={"/docs"} element={<Tester/>}/>
                     <Route path={"*"} element={<PageNotFound/>}/>
                 </Routes>

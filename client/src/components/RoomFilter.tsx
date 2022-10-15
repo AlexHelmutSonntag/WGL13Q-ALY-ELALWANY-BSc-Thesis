@@ -2,7 +2,8 @@ import React, {PropsWithChildren, useEffect} from "react";
 import {GridColDef} from "@mui/x-data-grid"
 import {MenuItem, TextField} from "@mui/material";
 import {FilterState, Language, ProficiencyLevel} from "../Types";
-import {ApplyFilterButton} from "./FormButton";
+import {ApplyFilterButton, DiscardFormButton} from "./FormButton";
+import {capacityOptions, languageOptions, levelOptions} from "../Utils";
 
 
 interface FilterProps extends PropsWithChildren {
@@ -19,52 +20,85 @@ const styleColors: any = {
 const VISIBLE_FIELDS = ['Language', 'Level', 'Created at', 'People', 'RoomID']
 const columns: GridColDef[] = [
     {field: 'language', headerName: 'Language', width: 150, editable: false},
-    {field: 'level', headerName: 'Level', width: 150, editable: false},
+    {field: 'proficiencyLevel', headerName: 'Level', width: 150, editable: false},
     {field: 'createdAt', headerName: 'Created at', width: 150, editable: false},
     {field: 'capacity', headerName: 'Capacity', width: 150, editable: false},
     {field: 'roomId', headerName: 'RoomID', width: 150, editable: false},
 ]
 
 const rows = [
-    {language: Language.ENGLISH, level: ProficiencyLevel.ADVANCED, capacity: 0, roomId: 1, createdAt: "10-09-2022"},
-    {language: Language.SPANISH, level: ProficiencyLevel.BEGINNER, capacity: 0, roomId: 2, createdAt: "10-09-2022"},
-    {language: Language.GERMAN, level: ProficiencyLevel.FLUENT, capacity: 0, roomId: 3, createdAt: "10-09-2022"},
-    {language: Language.HUNGARIAN, level: ProficiencyLevel.NATIVE, capacity: 2, roomId: 4, createdAt: "10-09-2022"},
-    {language: Language.GERMAN, level: ProficiencyLevel.ADVANCED, capacity: 1, roomId: 5, createdAt: "10-09-2022"},
-    {language: Language.GERMAN, level: ProficiencyLevel.ADVANCED, capacity: 1, roomId: 6, createdAt: "10-09-2022"},
-    {language: Language.GERMAN, level: ProficiencyLevel.ADVANCED, capacity: 2, roomId: 7, createdAt: "10-09-2022"},
-    {language: Language.GERMAN, level: ProficiencyLevel.ADVANCED, capacity: 1, roomId: 8, createdAt: "10-09-2022"},
-    {language: Language.FRENCH, level: ProficiencyLevel.ADVANCED, capacity: 1, roomId: 8, createdAt: "10-09-2022"},
+    {
+        language: Language.ENGLISH,
+        proficiencyLevel: ProficiencyLevel.ADVANCED,
+        capacity: 0,
+        roomId: 1,
+        createdAt: "10-09-2022"
+    },
+    {
+        language: Language.SPANISH,
+        proficiencyLevel: ProficiencyLevel.BEGINNER,
+        capacity: 0,
+        roomId: 2,
+        createdAt: "10-09-2022"
+    },
+    {
+        language: Language.GERMAN,
+        proficiencyLevel: ProficiencyLevel.FLUENT,
+        capacity: 0,
+        roomId: 3,
+        createdAt: "10-09-2022"
+    },
+    {
+        language: Language.HUNGARIAN,
+        proficiencyLevel: ProficiencyLevel.NATIVE,
+        capacity: 2,
+        roomId: 4,
+        createdAt: "10-09-2022"
+    },
+    {
+        language: Language.GERMAN,
+        proficiencyLevel: ProficiencyLevel.ADVANCED,
+        capacity: 1,
+        roomId: 5,
+        createdAt: "10-09-2022"
+    },
+    {
+        language: Language.GERMAN,
+        proficiencyLevel: ProficiencyLevel.ADVANCED,
+        capacity: 1,
+        roomId: 6,
+        createdAt: "10-09-2022"
+    },
+    {
+        language: Language.GERMAN,
+        proficiencyLevel: ProficiencyLevel.ADVANCED,
+        capacity: 2,
+        roomId: 7,
+        createdAt: "10-09-2022"
+    },
+    {
+        language: Language.GERMAN,
+        proficiencyLevel: ProficiencyLevel.ADVANCED,
+        capacity: 1,
+        roomId: 8,
+        createdAt: "10-09-2022"
+    },
+    {
+        language: Language.FRENCH,
+        proficiencyLevel: ProficiencyLevel.ADVANCED,
+        capacity: 1,
+        roomId: 8,
+        createdAt: "10-09-2022"
+    },
 ]
 
-let languagesList = rows.map((item) => item.language);
-languagesList = languagesList.filter((item, index) => languagesList.indexOf(item) === index);
-
-const languageOptions = languagesList.map((language) => {
-    return <MenuItem value={language}>{language}</MenuItem>;
-})
-
-let levelList = rows.map((item) => item.level);
-levelList = levelList.filter((item, index) => levelList.indexOf(item) === index);
-
-const levelOptions = levelList.map((level) => {
-    return <MenuItem value={level}>{level}</MenuItem>
-})
-
-const capacityOptions = [1, 2].map((capacity) => {
-    return <MenuItem value={capacity}>{capacity}</MenuItem>
-})
-
 export const RoomFilter: React.FC<FilterProps> = (props) => {
-    // const {data} = useDemoData({
-    //     dataSet: 'Employee',
-    //     visibleFields: VISIBLE_FIELDS,
-    //     rowLength: 100,
-    // })
+
     const [filterValues, setFilterValues] = React.useState<FilterState>({
         language: Language.GERMAN,
-        level: ProficiencyLevel.BEGINNER,
+        proficiencyLevel: ProficiencyLevel.BEGINNER,
         capacity: 1,
+        filter: true,
     });
 
     useEffect(() => {
@@ -76,8 +110,24 @@ export const RoomFilter: React.FC<FilterProps> = (props) => {
         setFilterValues({...filterValues, [prop]: event.target.value});
     }
 
-    const clickHandler = (filterValues: FilterState) => {
-        props.sendFilterInput(filterValues);
+    const filterDispatcher = () => {
+        setFilterValues({...filterValues, filter: true});
+        props.sendFilterInput({
+            language: filterValues.language,
+            proficiencyLevel: filterValues.proficiencyLevel,
+            capacity: filterValues.capacity,
+            filter: true,
+        });
+    }
+    const filterRemover = ()=>{
+        setFilterValues({...filterValues, filter: false});
+        // console.log(filterValues)
+        props.sendFilterInput({
+            language: Language.GERMAN,
+            proficiencyLevel: ProficiencyLevel.BEGINNER,
+            capacity: 1,
+            filter: false,
+        });
     }
 
     return (<div style={{display: "flex", justifyContent: "left", marginTop: "5px",}}>
@@ -105,15 +155,15 @@ export const RoomFilter: React.FC<FilterProps> = (props) => {
                 },
             }}
         >
-            {languageOptions}
+            {languageOptions()}
         </TextField>
         <TextField
             id="select-level"
-            value={filterValues.level}
+            value={filterValues.proficiencyLevel}
             label="Level"
             variant={"outlined"}
             select
-            onChange={filterHandler('level')}
+            onChange={filterHandler('proficiencyLevel')}
             sx={{
                 marginBottom: 1,
                 color: "#FFFFFF",
@@ -131,7 +181,7 @@ export const RoomFilter: React.FC<FilterProps> = (props) => {
                 },
             }}
         >
-            {levelOptions}
+            {levelOptions()}
         </TextField>
         <TextField
             id="select-capacity"
@@ -155,8 +205,12 @@ export const RoomFilter: React.FC<FilterProps> = (props) => {
                 },
             }}
         >
-            {capacityOptions}
+            {capacityOptions()}
         </TextField>
-        <ApplyFilterButton onClick={() => clickHandler(filterValues)}>Apply</ApplyFilterButton>
+        <ApplyFilterButton onClick={() => filterDispatcher()}>Apply</ApplyFilterButton>
+        <DiscardFormButton style={{
+            border: "1px solid #FFFFFF80",
+            width: '10ch',
+        }} onClick={()=> filterRemover()}>Remove</DiscardFormButton>
     </div>)
 }

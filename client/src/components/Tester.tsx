@@ -322,7 +322,7 @@ export const Tester: React.FC = () => {
     }
 
     const handleErrorMessage = (error: any) => {
-        console.log(`[${client.sessionId}] Error : ${error}`)
+        console.log(`[${client.sessionId}] Error : ${ JSON.stringify(error)}`)
     }
 
 
@@ -367,10 +367,11 @@ export const Tester: React.FC = () => {
     const addRoomToStore = () => {
         let room: RoomState = {
             language: Language.GERMAN,
-            level: ProficiencyLevel.NATIVE,
+            proficiencyLevel: ProficiencyLevel.NATIVE,
             createdAt: new Date("2022-09-28"),
             capacity: 1,
             roomID: generateUuid(),
+            clients: []
         }
         dispatch(addRoom(room));
         getRoom(room)
