@@ -18,25 +18,18 @@ export enum Language {
 }
 
 export enum ProficiencyLevel {
-    NATIVE = "NATIVE",
-    ADVANCED = "ADVANCED",
+    BEGINNER = "BEGINNER",
     FLUENT = "FLUENT",
-    BEGINNER = "BEGINNER"
+    ADVANCED = "ADVANCED",
+    NATIVE = "NATIVE",
 }
 
-export interface RoomState {
-    language: Language;
-    level: ProficiencyLevel;
-    createdAt: Date;
-    capacity: number;
-    roomID: string;
-}
-
-export enum UserMediaError{
+export enum UserMediaError {
     NOT_FOUND_ERROR = "NotFoundError",
     SECURITY_ERROR = "SecurityError",
     PERMISSION_DENIED_ERROR = "PermissionDeniedError"
 }
+
 export enum MessageType {
     TEXT = "TEXT",
     OFFER = "OFFER",
@@ -50,11 +43,20 @@ export interface ClientSession {
     sessionId: string;
 }
 
-export interface FilterState {
-    language?: Language;
-    level?: ProficiencyLevel;
+export interface RoomState {
+    language: Language;
+    proficiencyLevel: ProficiencyLevel;
     capacity?: number;
+    createdAt: Date;
+    roomID: string;
+    clients: string[];
 }
+
+export type FilterState = Pick<RoomState, "language" | "proficiencyLevel" | "capacity"> & {
+    filter: boolean;
+}
+export type NewRoomState = Pick<RoomState, "language" | "proficiencyLevel" | "createdAt">
+
 
 export type UserState = {
     firstName: string;
@@ -81,5 +83,4 @@ export type AuthenticatedUser = UpdateUserState & {
 }
 
 export type UpdateUserState = Pick<UserProps, "firstName" | "lastName" | "dob" | "gender" | "role" | "username" | "email" | "password" | "passValuesToParent">
-
 export type LoginState = Pick<UserState, "email" | "password" | "validEmail" | "showPassword" | "username">;

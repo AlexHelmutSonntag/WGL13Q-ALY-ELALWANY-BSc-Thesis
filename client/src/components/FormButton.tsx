@@ -23,6 +23,7 @@ const FormButtonStyles = {
         "color": "#5BC0BE",
     }
 }
+
 export const DiscardFormButton = styled(Button)<StyledButtonProps>({
     "background-color": "rgba(28,37,65,0.5)",
     "width": '20ch',

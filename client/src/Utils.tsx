@@ -1,5 +1,8 @@
 import axios from "axios";
 import {v4 as uuidv4} from 'uuid';
+import {Language, ProficiencyLevel} from "./Types";
+import {MenuItem} from "@mui/material";
+import React from "react";
 
 export const stringToDate = (date:String) => {
     let dd_mm_yyyy = date;
@@ -85,4 +88,27 @@ export const fetchUserDetails = (username: string, config: any) => {
             }
         }
     ).catch((error) => console.log(error));
+}
+
+
+export const levelOptions = () => {
+    let list = [];
+    for (let level in ProficiencyLevel) {
+        list.push(level)
+    }
+    return list.map(level => <MenuItem value={level}>{level}</MenuItem>);
+}
+
+export const languageOptions = () => {
+    let list = [];
+    for (let language in Language) {
+        list.push(language)
+    }
+    return list.map(language => <MenuItem value={language}>{language}</MenuItem>);
+}
+
+export const capacityOptions = () =>{
+ return [0, 1, 2].map((capacity) => {
+        return <MenuItem value={capacity}>{capacity}</MenuItem>
+    });
 }

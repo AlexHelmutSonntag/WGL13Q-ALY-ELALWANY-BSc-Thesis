@@ -10,15 +10,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 @RestController
 @RequestMapping(path = "api/v1/room")
-@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
+@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000","http://192.168.0.218:3000"})
 @Slf4j
 
 public class RoomController {
@@ -49,13 +46,15 @@ public class RoomController {
         if (roomRequestBody == null) {
             return new ResponseEntity<>("Room already exists", HttpStatus.CONFLICT);
         }
+
+        Map<String,Object> response = new HashMap<>();
+        response.put("roomNumber" , roomRequestBody.getId());
+        response.put("language" , roomRequestBody.getLanguage());
+        response.put("proficiencyLevel" , roomRequestBody.getProficiencyLevel());
+        response.put("createdAt" , roomRequestBody.getCreatedAt());
+
         return new ResponseEntity<>(
-                "Room created -> id : " +
-                        roomRequestBody.getId() +
-                        ", language : " +
-                        roomRequestBody.getLanguage() +
-                        ", proficiencyLevel : " +
-                        roomRequestBody.getProficiencyLevel(), HttpStatus.OK);
+                response, HttpStatus.CREATED);
     }
 
     @GetMapping(path = "/{sid}/user/{uuid}")
@@ -66,7 +65,10 @@ public class RoomController {
     @GetMapping(path = "/all")
     public ResponseEntity<?> getAllRooms() {
         Set<Room> rooms = roomService.getRooms();
-        Set<RoomResponse> response = new HashSet<>();
+        List<RoomResponse> response = new ArrayList<>();
+        rooms.forEach(room -> {
+            log.info(room.toString());
+        });
 
         rooms.forEach(room -> {
             log.info(String.valueOf(room.getClients().keySet()));
@@ -75,6 +77,7 @@ public class RoomController {
             responseEntry.entry.put("language", room.getLanguage());
             responseEntry.entry.put("proficiencyLevel", room.getProficiencyLevel());
             responseEntry.entry.put("clients", room.getClients().keySet());
+            responseEntry.entry.put("createdAt", room.getCreatedAt());
             response.add(responseEntry);
         });
 
