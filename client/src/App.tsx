@@ -22,6 +22,7 @@ import {
 } from "./feature/user/userSlice";
 import {selectToken, tokenSlice} from "./feature/token/tokenSlice";
 import {Tester} from "./components/Tester";
+import {IndexPage} from "./components/IndexPage";
 
 
 const App: React.FC = () => {
@@ -101,6 +102,7 @@ const App: React.FC = () => {
                            />}/>
                     <Route path={"/start"} element={<StartPage />}/>
                     <Route path={"/docs"} element={<Tester/>}/>
+                    <Route path={"/"} element={<IndexPage/>}/>
                     <Route path={"*"} element={<PageNotFound/>}/>
                 </Routes>
                 <Footer/>
