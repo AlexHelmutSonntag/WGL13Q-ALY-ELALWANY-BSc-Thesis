@@ -5,8 +5,9 @@
   "dependencies": {
     "@emotion/react": "^11.10.0",
     "@emotion/styled": "^11.10.0",
+    "@googlemaps/react-wrapper": "^1.1.35",
     "@mui/icons-material": "^5.8.4",
-    "@mui/material": "^5.10.5",
+    "@mui/material": "^5.10.10",
     "@mui/x-data-grid-generator": "^5.17.3",
     "@mui/x-date-pickers": "^5.0.0-beta.3",
     "@reduxjs/toolkit": "^1.8.5",
@@ -22,6 +23,7 @@
     "axios": "^0.27.2",
     "css-loader": "^6.7.1",
     "date-fns": "^2.29.1",
+    "material-ui-flags": "^1.2.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-redux": "^8.0.2",
@@ -35,6 +37,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "secure-start": "HTTPS=true SSL_CRT_FILE=/Users/ali/Desktop/ELTE/WGL13Q-ALY-ELALWANY-BSc-Thesis/new_cert.pem SSL_KEY_FILE=/Users/ali/Desktop/ELTE/WGL13Q-ALY-ELALWANY-BSc-Thesis/new_cert-key.pem react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -59,6 +62,7 @@
   },
   "devDependencies": {
     "@redux-devtools/core": "^3.13.1",
+    "@types/google.maps": "^3.50.4",
     "@types/styled-components": "^5.1.26",
     "@types/uuid": "^8.3.4",
     "sass": "^1.54.0"

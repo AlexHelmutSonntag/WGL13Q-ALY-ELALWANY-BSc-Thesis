@@ -8,6 +8,7 @@ video {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  margin: 0 2rem 0 2rem;
 }
 
 /*# sourceMappingURL=Tester.css.map */

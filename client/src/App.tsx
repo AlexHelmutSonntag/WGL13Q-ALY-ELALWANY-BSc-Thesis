@@ -4,30 +4,36 @@ import './style/App.scss'
 import './style/Login-Logout.scss'
 import {Header} from "./components/Header";
 import {Footer} from "./components/Footer";
-import {BrowserRouter as Router, Route, Routes} from "react-router-dom";
+import {BrowserRouter as Router, Navigate, Route, Routes, useNavigate} from "react-router-dom";
 import {SignInPage} from "./components/SignInPage";
 import {PageNotFound} from "./components/PageNotFound";
 import {HomePage} from "./components/HomePage";
 import {AccountSettingsPage} from "./components/AccountSettingsPage";
-import {Gender, Role, UpdateUserState} from "./Types";
+import {Gender, Language, ProficiencyLevel, Role, RoomState, UpdateUserState} from "./Types";
 import {StartPage} from "./components/StartPage";
 import {SignUpPage} from "./components/SignUpPage";
 import {useAppDispatch, useAppSelector} from "./store/hooks";
 import {
-    selectUser, setAuthenticated, setDOB, setEmail,
-    setFirstname, setGender,
-    setLastname, setRole,
-    setUsername,
-    userSlice
+    selectUser
 } from "./feature/user/userSlice";
-import {selectToken, tokenSlice} from "./feature/token/tokenSlice";
+import {selectToken} from "./feature/token/tokenSlice";
 import {Tester} from "./components/Tester";
+import {IndexPage} from "./components/IndexPage";
+import {RoomPage} from "./components/RoomPage";
 
 
 const App: React.FC = () => {
-
     const token = useAppSelector(selectToken)
     const [accessToken, setAccessToken] = React.useState<string>(token ? token : "");
+    const [selectedRoom, setSelectedRoom] = React.useState<RoomState>({
+        language: Language.GERMAN,
+        proficiencyLevel: ProficiencyLevel.NATIVE,
+        capacity: 2,
+        createdAt: new Date(),
+        roomID: "1",
+        clients: []
+    });
+
     const dispatch = useAppDispatch()
 
     const [userState, setUserState] = React.useState<UpdateUserState>({
@@ -40,6 +46,11 @@ const App: React.FC = () => {
         role: Role.USER,
         password: "",
     })
+
+    const receiveRoomFromStartPage = (room: RoomState) => {
+        console.log(JSON.stringify(room));
+        setSelectedRoom(room);
+    }
 
     const handleLogin = (isLoggedIn: boolean, username: string, user: UpdateUserState) => {
         console.log(`App.tsx logged in : ${isLoggedIn}`)
@@ -72,11 +83,11 @@ const App: React.FC = () => {
     }
 
     const userFromStore = useAppSelector(selectUser);
-
+    const roomNumber = 1;
     return (
         <Router>
             <div className="App">
-                <Header />
+                <Header/>
                 <Routes>
                     <Route path={"/signup"} element={<SignUpPage/>}/>
                     <Route path={"/login"}
@@ -99,8 +110,15 @@ const App: React.FC = () => {
                                                          email={userFromStore.email} role={userFromStore.role}
                                                          gender={userFromStore.gender}
                            />}/>
-                    <Route path={"/start"} element={<StartPage />}/>
+                    <Route path={"/start"} element={<StartPage passValuesToParent={receiveRoomFromStartPage}/>}/>
                     <Route path={"/docs"} element={<Tester/>}/>
+                    <Route path={"/"} element={<IndexPage/>}/>
+                    <Route path={`/room/${selectedRoom.roomID}`}
+                           element={<RoomPage
+                               language={selectedRoom.language}
+                               clients={[]}
+                               proficiencyLevel={selectedRoom.proficiencyLevel}
+                               roomID={selectedRoom.roomID} createdAt={selectedRoom.createdAt}/>}/>
                     <Route path={"*"} element={<PageNotFound/>}/>
                 </Routes>
                 <Footer/>

@@ -23,7 +23,7 @@ export const Header: React.FC = () => {
         dispatch({type:"USER_LOGOUT"});
         dispatch(removeToken(""))
         dispatch(removeUser(""))
-        navigate("/login");
+        navigate("/");
     }
 
     const conditionalRef = user.isAuthenticated? "/home" : "/";

@@ -9,7 +9,7 @@ export const HomePage: React.FC<UpdateUserState> = (props) => {
 
     const user = useAppSelector(selectUser);
     if (!user.isAuthenticated) {
-        return <Navigate to={"/login"}/>
+        return <Navigate to={"/"}/>
     }
 
     return <div>
