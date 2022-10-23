@@ -56,7 +56,7 @@ export const AccountSettingsPage: React.FC<AuthenticatedUser> = (props: Authenti
                 dob: dob,
                 gender: body.gender
             }
-            axios.put(`http://localhost:8080/api/v1/user/updateUser/${body.username}`,
+            axios.put(`https://192.168.0.218:8080/api/v1/user/updateUser/${body.username}`,
                 payload,
                 config,
             ).then((response) => {
@@ -75,7 +75,7 @@ export const AccountSettingsPage: React.FC<AuthenticatedUser> = (props: Authenti
     }
 
     const deleteUser = (body: any) => {
-        axios.delete(`http://localhost:8080/api/v1/user/${body.username}`,
+        axios.delete(`https://192.168.0.218:8080/api/v1/user/${body.username}`,
             config,
         ).then((response) => {
                 console.log(response);

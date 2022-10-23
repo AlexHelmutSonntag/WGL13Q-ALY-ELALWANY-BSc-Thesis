@@ -38,7 +38,7 @@ export const SignUpPage: React.FC = () => {
                 gender: body.gender
             }
             console.log(body);
-            axios.post('http://localhost:8080/api/v1/user/new',
+            axios.post('https://192.168.0.218:8080/api/v1/user/new',
                 payload,
             ).then((response) => {
                     console.log(response.data);

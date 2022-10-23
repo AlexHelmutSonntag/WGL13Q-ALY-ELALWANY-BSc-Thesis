@@ -15,7 +15,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping(path = "api/v1/room")
-@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000","http://192.168.0.218:3000"})
+//@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000","http://192.168.0.218:3000","*"})
 @Slf4j
 
 public class RoomController {

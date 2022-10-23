@@ -4,14 +4,28 @@ import {useNavigate} from "react-router-dom";
 import {useAppDispatch, useAppSelector} from "../store/hooks";
 import {selectToken} from "../feature/token/tokenSlice";
 import {selectUser} from "../feature/user/userSlice";
-import {Language, ProficiencyLevel, RoomState, UserMediaError} from "../Types";
+import {ClientSession, Language, ProficiencyLevel, RoomState, UserMediaError} from "../Types";
 import {addRoom, removeAllRooms, selectRooms} from "../feature/rooms/roomsSlice";
 import '../style/Tester.scss';
 import {generateUuid} from "../Utils";
 import {selectClient} from "../feature/client/clientSlice";
 import {MessageType} from "../Types";
+import {
+    muteMic,
+    turnVideoOff,
+    turnVideoOn,
+    sendToServer,
+    handleErrorMessage,
+    handleNewICECandidateMessage,
+    handleAnswerMessage,
+    handleICECandidateEvent,
+    handleTrackEvent,
+    createPeerConnection,
+    getLocalMediaStream, getMedia
+} from "../CallUtils";
+import {PeerCertificate} from "tls";
 
-let conn = new WebSocket("ws://localhost:8080/socket");
+let conn = new WebSocket("wss://192.168.0.218:8080/socket");
 
 const mediaConstraints = {
     audio: true,
@@ -28,13 +42,10 @@ const peerConnectionConfig = {
         {'urls': 'stun:stun.l.google.com:19302'},
     ]
 };
-const isOpen = (connection: WebSocket) => {
-    return connection.readyState === connection.OPEN;
-}
-
 
 export const Tester: React.FC = () => {
-    let myPeerConnection: any;
+    let myPeerConnection: RTCPeerConnection;
+    let alternativePeerConnection: RTCPeerConnection;
     let localStream: MediaStream;
     let localVideoTracks: MediaStreamTrack[];
     const navigate = useNavigate();
@@ -43,14 +54,7 @@ export const Tester: React.FC = () => {
     let remoteVideoRef = useRef<HTMLVideoElement>(null);
     let localVideoRef = useRef<HTMLVideoElement>(null);
 
-    const sendToServer = (message: any) => {
-        if (!isOpen(conn)) {
-            console.log(conn)
-            console.log("socket not open!");
-        }
-        conn.send(JSON.stringify(message));
-        console.log(`[${client.sessionId}] Message sent : ${message.payload.type} ${message.payload.data} `)
-    }
+
     conn.onmessage = (msg: any) => {
         let message = JSON.parse(msg.data);
         console.log(`[${client.sessionId}]  {from : ${message.from}, data : ${message.data}, language : ${message.language} , proficiencyLevel : ${message.proficiencyLevel}, roomNumber: ${message.roomNumber}}  `);
@@ -67,13 +71,13 @@ export const Tester: React.FC = () => {
                 handleOfferMessage(message);
                 break;
             case MessageType.ICE:
-                handleNewICECandidateMessage(message);
+                handleNewICECandidateMessage(message, client, myPeerConnection);
                 break;
             case MessageType.ANSWER:
-                handleAnswerMessage(message);
+                handleAnswerMessage(message, client, myPeerConnection);
                 break;
             default:
-                handleErrorMessage(`Wrong type of message received from server ${message.type}`);
+                handleErrorMessage(`Wrong type of message received from server ${message.type}`, client);
                 break;
         }
     }
@@ -89,14 +93,14 @@ export const Tester: React.FC = () => {
          */
         let level = ProficiencyLevel.NATIVE;
         let language = Language.GERMAN;
-        sendToServer({
+        sendToServer(conn, {
             from: client.sessionId,
             type: MessageType.JOIN,
             data: roomNumber,
             proficiencyLevel: level,
             language: language,
             roomNumber: roomNumber
-        })
+        }, client)
     }
 
     /*
@@ -110,15 +114,16 @@ export const Tester: React.FC = () => {
     Event handler of socket errors
      */
     conn.onerror = (message: any) => {
-        handleErrorMessage(message)
+        handleErrorMessage(message, client)
     }
+    window.onclose = (event)=> stop;
     const stop = () => {
         console.log(`[${client.sessionId}] Sending 'leave' message to server`);
-        sendToServer({
+        sendToServer(conn, {
             from: client.sessionId,
             type: MessageType.LEAVE,
             data: roomNumber,
-        })
+        }, client)
 
 
         if (myPeerConnection) {
@@ -131,8 +136,8 @@ export const Tester: React.FC = () => {
             myPeerConnection.oniceconnectionstatechange = null;
             myPeerConnection.onsignalingstatechange = null;
             myPeerConnection.onicegatheringstatechange = null;
-            myPeerConnection.onnotificationneeded = null;
-            myPeerConnection.onremovetrack = null;
+            // myPeerConnection.onnotificationneeded = null;
+            // myPeerConnection.onremovetrack = null;
 
             //Stopping the videos
             // if (localVideoRef.current!.srcObject) {
@@ -145,107 +150,121 @@ export const Tester: React.FC = () => {
             //         remoteVideoRef.current!.srcObject.getTracks().forEach((track) => track.stop())
             //     }
             // }
+
             localVideoRef.current!.srcObject = null;
 
             remoteVideoRef.current!.srcObject = null;
 
             //Closing the peer connection
-            myPeerConnection.close();
-            myPeerConnection = null;
-
+            // myPeerConnection.close();
+            // conn.close();
+            // myPeerConnection = null;
             console.log(`[${client.sessionId}] Close the socket`);
-            if (conn != null) {
-                conn.close();
-            }
+
+            // if (conn != null) {
+            //     conn.close();
+            // }
 
         }
 
     }
 
     const handlePeerConnection = (message: any) => {
+        // createPeerConnection(conn,client,myPeerConnection,peerConnectionConfig,remoteVideoRef);
         createPeerConnection();
-        getMedia(mediaConstraints);
+        getMedia(localStream,client,myPeerConnection,localVideoRef,mediaConstraints);
+        // getMedia(mediaConstraints);
         if (message.data === "true") {
-            myPeerConnection.onnegotiationneeded = handleNegotiationNeededEvent;
+            console.log(myPeerConnection)
+            myPeerConnection.addEventListener("negotiationneeded", (event)=>{
+                handleNegotiationNeededEvent(event);
+            })
+            // myPeerConnection.onnegotiationneeded = (event)=>{
+            //     handleNegotiationNeededEvent(event);
+            // };
         }
     }
 
     const createPeerConnection = () => {
-
         myPeerConnection = new RTCPeerConnection(peerConnectionConfig);
-
-        myPeerConnection.onicecandidate = handleICECandidateEvent;
-        console.log(`[${client.sessionId}] creating peer connection`);
-
-        myPeerConnection.ontrack = handleTrackEvent;
-    }
-
-    const getMedia = (constrains: any) => {
-        if (localStream) {
-            localStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
-        }
-        navigator.mediaDevices.getUserMedia(constrains)
-            .then(getLocalMediaStream).catch(handleGetUserMediaError)
-    }
-
-    const getLocalMediaStream = (mediaStream: MediaStream) => {
-        localStream = mediaStream;
-        console.log(`[${client.sessionId}] Getting local media stream`);
-        localVideoRef.current!.srcObject = localStream;
-        localVideoRef.current!.onloadedmetadata = ((ev: any) => {
-            localVideoRef.current!.play().then(() => console.log(`[${client.sessionId}] Local video displayed`)).catch((err) => console.log(`Error when playing ${err}`))
+        myPeerConnection.addEventListener("icecandidate", (event: any) => {
+            handleICECandidateEvent(event, client, conn)
         })
-        localStream.getTracks().forEach((track: MediaStreamTrack) => myPeerConnection.addTrack(track, localStream));
+        // myPeerConnection.oncandidate = handleICECandidateEvent(client,conn);
+        console.log(`[${client.sessionId}] creating peer connection`);
+        myPeerConnection.addEventListener("track", (event: any) => {
+            handleTrackEvent(event, client, remoteVideoRef);
+        })
+        // myPeerConnection.ontrack = handleTrackEvent;
     }
 
-    const handleGetUserMediaError = (error: any) => {
-        console.log(`[${client.sessionId}] Error getting user media : ${error.message}`);
-        switch (error.name) {
-            case UserMediaError.NOT_FOUND_ERROR:
-                alert(`Unable to open the call because no camera and/or microphone were found!`);
-                break;
-            case UserMediaError.SECURITY_ERROR:
-            case UserMediaError.PERMISSION_DENIED_ERROR:
-                alert(`Security Error or permission denied`);
-                break;
-            default:
-                // alert(`Error opening your camera and/or microphone ${error.message}`);
-                console.log(`Error opening your camera and/or microphone ${error.message}`);
-                break;
-        }
-    }
+    // const getMedia = (constrains: any) => {
+    //     if (localStream) {
+    //         localStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+    //     }
+    //     navigator.mediaDevices.getUserMedia(constrains)
+    //         // .then(getLocalMediaStream).catch(handleGetUserMediaError);
+    //         .then((mediaStream:MediaStream) => getLocalMediaStream(mediaStream,localStream,client,localVideoRef,myPeerConnection)).catch(handleGetUserMediaError)
+    // }
 
-    const handleICECandidateEvent = (event: any) => {
+    // const getLocalMediaStream = (mediaStream: MediaStream) => {
+    //     localStream = mediaStream;
+    //     console.log(`[${client.sessionId}] Getting local media stream`);
+    //     localVideoRef.current!.srcObject = localStream;
+    //     localVideoRef.current!.onloadedmetadata = ((ev: any) => {
+    //         localVideoRef.current!.play().then(() => console.log(`[${client.sessionId}] Local video displayed`)).catch((err) => console.log(`Error when playing ${err}`))
+    //     })
+    //     localStream.getTracks().forEach((track: MediaStreamTrack) => myPeerConnection.addTrack(track, localStream));
+    // }
 
-        console.log(`[${client.sessionId}] ICE Candidate Event ? ${event.candidate}`);
+    // const handleGetUserMediaError = (error: any) => {
+    //     console.log(`[${client.sessionId}] Error getting user media : ${error.message}`);
+    //     switch (error.name) {
+    //         case UserMediaError.NOT_FOUND_ERROR:
+    //             alert(`Unable to open the call because no camera and/or microphone were found!`);
+    //             break;
+    //         case UserMediaError.SECURITY_ERROR:
+    //         case UserMediaError.PERMISSION_DENIED_ERROR:
+    //             alert(`Security Error or permission denied`);
+    //             break;
+    //         default:
+    //             // alert(`Error opening your camera and/or microphone ${error.message}`);
+    //             console.log(`Error opening your camera and/or microphone ${error.message}`);
+    //             break;
+    //     }
+    // }
+    //
+    // const handleICECandidateEvent = (event: any) => {
+    //     console.log(`[${client.sessionId}] ICE Candidate Event ? ${event.candidate}`);
+    //     if (event.candidate) {
+    //         sendToServer(conn,{
+    //             from: client.sessionId,
+    //             type: MessageType.ICE,
+    //             candidate: event.candidate
+    //         },client);
+    //
+    //         console.log(`[${client.sessionId}] ICE Candidate Event : ICE Candidate sent ${event.candidate}`);
+    //     }
+    // }
 
-        if (event.candidate) {
-            sendToServer({
-                from: client.sessionId,
-                type: MessageType.ICE,
-                candidate: event.candidate
-            });
+    // const handleTrackEvent = (event: any) => {
+    //     console.log(`[${client.sessionId}] Setting stream to remote video element`);
+    //     remoteVideoRef.current!.srcObject = event.streams[0];
+    // }
 
-            console.log(`[${client.sessionId}] ICE Candidate Event : ICE Candidate sent ${event.candidate}`);
-        }
-    }
+    const handleNegotiationNeededEvent = (event:Event) => {
+        console.log(`[${client.sessionId}] Negotiation needed event : ${event}`)
 
-    const handleTrackEvent = (event: any) => {
-        console.log(`[${client.sessionId}] Setting stream to remote video element`);
-        remoteVideoRef.current!.srcObject = event.streams[0];
-    }
-
-    const handleNegotiationNeededEvent = () => {
         myPeerConnection.createOffer().then((offer: any) => {
             return myPeerConnection.setLocalDescription(offer);
         }).then(() => {
-            sendToServer({
+            sendToServer(conn, {
                 from: client.sessionId,
                 type: MessageType.OFFER,
                 sdp: myPeerConnection.localDescription
-            })
+            }, client)
 
-            console.log(`[${client.sessionId}] Negotiation needed event : SDP offer sent`)
+            console.log(`[${client.sessionId}] : SDP offer sent`)
 
         }).catch((error: any) => {
             console.log(`[${client.sessionId}] Failure to connect error : ${error}`)
@@ -256,8 +275,6 @@ export const Tester: React.FC = () => {
         console.log(`Accepting OFFER message ${message}`);
 
         let sessionDescription = new RTCSessionDescription(message.sdp);
-
-
         if (sessionDescription != null && message.sdp != null) {
             console.log(`[${client.sessionId}]  RTC signalling state :  ${myPeerConnection.signalingState}`);
             myPeerConnection.setRemoteDescription(sessionDescription).then(() => {
@@ -293,13 +310,13 @@ export const Tester: React.FC = () => {
                 We send back the answer to the server with our sessionId and the localDescription.
                  */
                 console.log(`[${client.sessionId}] Sending answer packet back to server`);
-                sendToServer({
+                sendToServer(conn, {
                     from: client.sessionId,
                     type: MessageType.ANSWER,
                     sdp: myPeerConnection.localDescription
-                });
+                }, client);
 
-            }).catch(handleErrorMessage);
+            }).catch(error=>handleErrorMessage(error,client));
 
         }
 
@@ -308,22 +325,19 @@ export const Tester: React.FC = () => {
     /*
         Configures the remote description, which is the SDP payload
      */
-    const handleAnswerMessage = (message: any) => {
-        console.log(`[${client.sessionId}] Received  message ${message.data} from ${message.from}`);
-        myPeerConnection.setRemoteDescription(message.sdp).catch(handleErrorMessage);
-        // myPeerConnection.setRemoteDescription(message.payload.sdp).catch(handleErrorMessage);
-    }
 
-    const handleNewICECandidateMessage = (message: any) => {
-        let candidate = new RTCIceCandidate(message.candidate);
-        // let candidate = new RTCIceCandidate(message.payload.candidate);
-        console.log(`[${client.sessionId}] Adding received ICE candidate ${JSON.stringify(candidate)}`)
-        myPeerConnection.addIceCandidate(candidate).catch(handleErrorMessage);
-    }
+    // const handleAnswerMessage = (message: any) => {
+    //     console.log(`[${client.sessionId}] Received  message ${message.data} from ${message.from}`);
+    //     myPeerConnection.setRemoteDescription(message.sdp).catch(handleErrorMessage);
+    // }
+    //
 
-    const handleErrorMessage = (error: any) => {
-        console.log(`[${client.sessionId}] Error : ${ JSON.stringify(error)}`)
-    }
+    // const handleNewICECandidateMessage = (message: any) => {
+    //     let candidate = new RTCIceCandidate(message.candidate);
+    //     // let candidate = new RTCIceCandidate(message.payload.candidate);
+    //     console.log(`[${client.sessionId}] Adding received ICE candidate ${JSON.stringify(candidate)}`)
+    //     myPeerConnection.addIceCandidate(candidate).catch(handleErrorMessage);
+    // }
 
 
     const client = useAppSelector(selectClient);
@@ -344,7 +358,7 @@ export const Tester: React.FC = () => {
     }
 
     const getRoom = (body: any) => {
-        axios.get(`http://localhost:8080/api/v1/room/${body.roomID}`, config
+        axios.get(`https://192.168.0.218:8080/api/v1/room/${body.roomID}`, config
         ).then((response) => {
             console.log(response);
             if (response.status === 200) {
@@ -353,54 +367,17 @@ export const Tester: React.FC = () => {
         }).catch((error) => console.log(error));
     }
 
-    const createRoom = () => {
-        axios.get(`http://localhost:8080/api/v1/room/new`, config
-        ).then((response) => {
-            console.log(response);
-            if (response.status === 201) {
-            }
-        }).catch((error) =>
-            console.log(error)
-        )
-    }
-
-    const addRoomToStore = () => {
-        let room: RoomState = {
-            language: Language.GERMAN,
-            proficiencyLevel: ProficiencyLevel.NATIVE,
-            createdAt: new Date("2022-09-28"),
-            capacity: 1,
-            roomID: generateUuid(),
-            clients: []
-        }
-        dispatch(addRoom(room));
-        getRoom(room)
-    }
-
-    const emptyRooms = () => {
-        dispatch(removeAllRooms([]))
-    }
-
-    const getRooms = () => {
-        rooms.forEach((room) => console.log(room));
-    }
 
     const [msg, setMsg] = React.useState('');
 
     const sendMsg = () => {
-        sendToServer(client.sessionId);
+        sendToServer(conn, client.sessionId, client);
     }
-    const handleRoomNumberChange = (event: ChangeEvent<HTMLInputElement>) => {
-        let num = parseInt(event.target.value);
-        if (num) {
-            setRoomNumber(num);
-        }
-    }
-
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const openCameraAndMic = () => {
         console.log('clicked')
+        console.log(navigator);
         navigator.mediaDevices.getUserMedia(mediaConstraints).then((mediaStream: MediaStream) => {
             videoRef.current!.srcObject = mediaStream;
             videoRef.current!.onloadedmetadata = ((ev: any) => {
@@ -421,27 +398,6 @@ export const Tester: React.FC = () => {
         }).catch((err) => console.log(err))
     }
 
-    const turnVideoOff = () => {
-        localVideoTracks = localStream.getVideoTracks();
-        localVideoTracks.forEach((track: MediaStreamTrack) => localStream.removeTrack(track))
-        localVideoRef.current!.hidden = true;
-        console.log(`[${client.sessionId}] Video turned off`);
-    }
-    const turnVideoOn = () => {
-        localVideoTracks = localStream.getVideoTracks();
-        localVideoTracks.forEach((track: MediaStreamTrack) => localStream.addTrack(track))
-        localVideoRef.current!.hidden = false;
-        console.log(`[${client.sessionId}] Video turned on`);
-    }
-    const turnMicOn = () => {
-        localVideoRef.current!.muted = false;
-        console.log(`[${client.sessionId}] Mic turned on`);
-    }
-    const turnMicOff = () => {
-        localVideoRef.current!.muted = true;
-        console.log(`[${client.sessionId}] Mic turned off`);
-    }
-
 
     return <div>
         <h1>Tester</h1>
@@ -458,18 +414,20 @@ export const Tester: React.FC = () => {
         <button onClick={() => closeCameraAndMic()}>Close Video & Audio</button>
 
         <button onClick={() => videoRef.current!.muted = !videoRef.current!.muted}>Toggle Audio self</button>
-        <button onClick={() => turnVideoOn()}>Turn video on</button>
-        <button onClick={() => turnVideoOff()}>Turn video off</button>
-        <button onClick={() => turnMicOn()}>Turn mic on</button>
-        <button onClick={() => turnMicOff()}>Turn mic off</button>
+        <button onClick={() => turnVideoOn(localVideoRef, localVideoTracks, localStream, client)}>Turn video on</button>
+        <button onClick={() => turnVideoOff(localVideoRef, localVideoTracks, localStream, client)}>Turn video off
+        </button>
+        <button onClick={() => muteMic(localVideoRef, client, false)}>Turn mic on</button>
+        <button onClick={() => muteMic(localVideoRef, client, true)}>Turn mic off</button>
         <button onClick={() => stop()}>Exit</button>
 
         <div id={"video-grid"}>
             {/*You might need to test the src and ref attributes of video tag*/}
-            <video id={"local-video"} ref={localVideoRef} src={localVideoSrc} autoPlay
+            <video id={"local-video"} ref={localVideoRef} src={localVideoSrc} style={{outline: "solid 1px blue"}}
+                   autoPlay
                    playsInline={true}>vid
             </video>
-            <video id={"remote-video"} ref={remoteVideoRef} autoPlay
+            <video id={"remote-video"} ref={remoteVideoRef} style={{outline: "solid 1px red"}} autoPlay
                    playsInline={true}>vid
             </video>
             <video id={"test-video"} ref={videoRef} autoPlay>Test</video>

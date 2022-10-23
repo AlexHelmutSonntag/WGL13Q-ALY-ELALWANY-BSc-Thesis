@@ -1,0 +1,73 @@
+#room-container {
+  background-color: #141C36;
+  color: #ffffff;
+}
+#room-container li {
+  font-weight: bold;
+}
+#room-container #room-activity {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+}
+#room-container #room-activity #room-details {
+  height: 6rem;
+  background-color: rgba(58, 80, 107, 0.2);
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+}
+#room-container #room-activity #room-connection-controls {
+  padding-top: 2rem;
+  outline: 0.5px solid rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+}
+#room-container #room-activity #invite-box {
+  display: flex;
+  flex-direction: column;
+}
+#room-container #chat-container {
+  display: flex;
+  justify-content: space-evenly;
+}
+#room-container #chat-container #incoming-video-container {
+  display: flex;
+}
+#room-container #chat-container #incoming-video-container video {
+  margin-left: 15px;
+  width: 70rem;
+  height: 42rem;
+}
+#room-container #chat-container video {
+  border: 1px solid #FFFFFF;
+  border-radius: 15px;
+  object-fit: cover;
+}
+#room-container #chat-container #local-video-container {
+  display: flex;
+  align-items: flex-end;
+}
+#room-container #chat-container #local-video-container video {
+  object-fit: cover;
+  width: 20rem;
+  height: 10rem;
+}
+#room-container #video-controls {
+  display: flex;
+  justify-content: center;
+}
+#room-container #video-controls #controller-container {
+  margin: 10px 0 10px 0;
+  display: inherit;
+  justify-content: space-evenly;
+  align-items: center;
+  background-color: rgba(35, 37, 40, 0.7);
+  border-radius: 15px;
+  width: 25rem;
+  height: 4rem;
+}
+#room-container #video-controls #controller-container svg {
+  cursor: pointer;
+  font-size: 2rem;
+}
+
+/*# sourceMappingURL=RoomPage.css.map */

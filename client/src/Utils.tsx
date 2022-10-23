@@ -65,7 +65,7 @@ export const validatePasswordInput = (password: string, repeatedPassword: string
 
 
 export const fetchUserDetails = (username: string, config: any) => {
-    axios.get(`http://localhost:8080/api/v1/user/${username}`,
+    axios.get(`http://192.168.0.218:8080/api/v1/user/${username}`,
         config,
     ).then((response) => {
             console.log(response);

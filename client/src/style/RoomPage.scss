@@ -1,0 +1,94 @@
+#room-container {
+  background-color: #141C36
+;
+  color: #ffffff;
+  //min-height: 90vh;
+  li {
+    //text-align: center;
+    font-weight: bold;
+  }
+
+  #room-activity {
+    display: flex;
+    justify-content: space-around;
+    //outline: solid 1px blue;
+    padding: 10px;
+    #room-details {
+      height: 6rem;
+      background-color: rgba(58, 80, 107, 0.2);
+      border-radius: 10px;
+      padding: 0.5rem 1rem;
+
+    }
+    #room-connection-controls{
+      padding-top:2rem;
+      outline: 0.5px solid rgba(255, 255, 255, 0.5);
+      border-radius: 10px;
+    }
+
+    #invite-box {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  #chat-container {
+    display: flex;
+    justify-content: space-evenly;
+
+    #incoming-video-container {
+      //outline: 2px solid #a44d4d;
+      display: flex;
+      //justify-content: flex-start;
+      video {
+        margin-left: 15px;
+        width: 70rem;
+        height: 42rem;
+      }
+    }
+
+    video {
+      //background-color: #0B132B;
+      border: 1px solid #FFFFFF;
+      border-radius: 15px;
+      object-fit: cover;
+    }
+
+    #local-video-container {
+      display: flex;
+      //justify-content: flex-end;
+      align-items: flex-end;
+      //outline: 1px solid blue;
+
+      video {
+        object-fit: cover;
+        width: 20rem;
+        height: 10rem;
+      }
+    }
+
+  }
+
+  #video-controls {
+    display: flex;
+    justify-content: center;
+
+    #controller-container {
+      margin: 10px 0 10px 0;
+      display: inherit;
+      justify-content: space-evenly;
+      align-items: center;
+      background-color: rgba(35, 37, 40, 0.7);
+      //box-shadow: 3px 3px 3px 2px rgba(11, 19, 43, 0.36);
+      border-radius: 15px;
+      width: 25rem;
+      height: 4rem;
+
+      svg {
+        cursor: pointer;
+        font-size: 2rem;
+      }
+    }
+  }
+
+}

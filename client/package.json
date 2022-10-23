@@ -37,6 +37,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "secure-start": "HTTPS=true SSL_CRT_FILE=/Users/ali/Desktop/ELTE/WGL13Q-ALY-ELALWANY-BSc-Thesis/new_cert.pem SSL_KEY_FILE=/Users/ali/Desktop/ELTE/WGL13Q-ALY-ELALWANY-BSc-Thesis/new_cert-key.pem react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

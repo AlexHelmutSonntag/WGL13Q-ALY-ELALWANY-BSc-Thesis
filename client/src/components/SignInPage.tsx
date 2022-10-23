@@ -79,8 +79,8 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
             }
             await axios({
                 method: 'post',
-                url: 'http://localhost:8080/login',
-                headers: {'content-type': 'application/x-www-form-urlencoded'},
+                url: 'https://192.168.0.218:8080/login',
+                headers: {'content-type': 'application/x-www-form-urlencoded',},
                 data: qs.stringify(params),
             }).then(response => {
                 console.log(`Login response:\n ${response.data}`);
@@ -103,7 +103,7 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
     }
 
     const fetchUserDetails = (username: string, config: any) => {
-        axios.get(`http://localhost:8080/api/v1/user/${username}`,
+        axios.get(`https://192.168.0.218:8080/api/v1/user/${username}`,
             config,
         ).then((response) => {
                 console.log(response);

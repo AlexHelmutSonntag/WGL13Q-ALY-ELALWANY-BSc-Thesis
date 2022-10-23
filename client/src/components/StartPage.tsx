@@ -1,9 +1,9 @@
 import React, {useState} from "react";
-import {Navigate} from "react-router-dom";
+import {Navigate, useNavigate} from "react-router-dom";
 import {useAppSelector} from "../store/hooks";
 import {selectUser} from "../feature/user/userSlice";
 import {RoomFilter} from "./RoomFilter";
-import {FilterState, Gender, Language, NewRoomState, ProficiencyLevel, RoomState} from "../Types";
+import {FilterState, Gender, Language, NewRoomState, ProficiencyLevel, RoomState, UserState} from "../Types";
 import {Button, List, ListItem, ListItemButton, ListItemText, MenuItem, Modal, TextField} from "@mui/material";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -137,14 +137,14 @@ const rows = [
 ]
 
 
-const renderRoomsList = (list: Array<RoomState>,filterState: FilterState) => {
+const renderRoomsList = (list: Array<RoomState>,filterState: FilterState,clickHandler: (item:RoomState) => any) => {
     if(filterState.filter){
         console.log(`FILTER : ${filterState.language}\t${filterState.proficiencyLevel}\t${filterState.capacity} ${filterState.filter}`)
         list = list.filter(room => room.capacity === filterState.capacity && room.language === filterState.language && room.proficiencyLevel === filterState.proficiencyLevel);
     }
 
     return list.map((item: RoomState) => {
-        console.log("here")
+        // console.log("here")
         // let strList = Object.values(item).join("\t")
         let strList = `${item.language}\t${item.proficiencyLevel}\t${item.capacity}\t${item.createdAt}\t#${item.roomID}`
         return <ListItem disablePadding style={{
@@ -155,7 +155,7 @@ const renderRoomsList = (list: Array<RoomState>,filterState: FilterState) => {
             wordSpacing: "190px",
             color: '#FFFFFF',
         }}>
-            <ListItemButton>
+            <ListItemButton onClick={()=>clickHandler(item)}>
                 <ListItemText
                     primary={strList}/>
             </ListItemButton>
@@ -163,7 +163,11 @@ const renderRoomsList = (list: Array<RoomState>,filterState: FilterState) => {
     })
 }
 
-export const StartPage: React.FC = (props) => {
+interface StartPageProps{
+    passValuesToParent: (value: RoomState) => void;
+}
+
+export const StartPage: React.FC<StartPageProps> = (props) => {
 
     const [newRoomValue, setNewRoomValue] = React.useState<NewRoomState>({
         language: Language.GERMAN,
@@ -190,6 +194,14 @@ export const StartPage: React.FC = (props) => {
             }
         }
     }
+    const navigate = useNavigate();
+
+    const handleRoomClick = (room:RoomState)=>{
+        // console.log(JSON.stringify(room));
+        props.passValuesToParent(room)
+        navigate(`/room/${room.roomID}`);
+
+    }
 
     const handleNewRoomChange = (prop: keyof NewRoomState) => (event: React.ChangeEvent<HTMLInputElement> | any) => {
         setNewRoomValue({...newRoomValue, [prop]: event.target.value});
@@ -206,7 +218,7 @@ export const StartPage: React.FC = (props) => {
             proficiencyLevel: newRoomValue.proficiencyLevel,
         }
 
-        axios.post('http://localhost:8080/api/v1/room/new',
+        axios.post('https://192.168.0.218:8080/api/v1/room/new',
             payload, config,
         ).then((response) => {
                 console.log(response.data);
@@ -231,7 +243,7 @@ export const StartPage: React.FC = (props) => {
             capacity : state.capacity,
             filter: state.filter,
         })
-        renderRoomsList(rooms,state);
+        renderRoomsList(rooms,state,handleRoomClick);
     }
 
     const user = useAppSelector(selectUser);
@@ -240,7 +252,7 @@ export const StartPage: React.FC = (props) => {
     }
 
     const getRooms = () => {
-        axios.get('http://localhost:8080/api/v1/room/all',
+        axios.get('https://192.168.0.218:8080/api/v1/room/all',
             config,
         ).then((response) => {
                 // console.log(response)
@@ -274,7 +286,7 @@ export const StartPage: React.FC = (props) => {
         });
     }
     // getRooms();
-    renderRoomsList(rooms,filterState);
+    renderRoomsList(rooms,filterState,handleRoomClick);
     return (
         <div id={"start-page"} style={{
             backgroundColor: '#3a506b',
@@ -435,7 +447,7 @@ export const StartPage: React.FC = (props) => {
                         '& .MuiListItemText-root': {},
                     }}
                     >
-                        {renderRoomsList(rooms,filterState)}
+                        {renderRoomsList(rooms,filterState,handleRoomClick)}
                     </List>
                 </div>
             </div>
