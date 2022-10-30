@@ -13,29 +13,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.HttpStatus.FORBIDDEN;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.HttpStatus.*;
 
 
 @RestController
@@ -99,17 +88,33 @@ public class AppUserController {
             return new ResponseEntity<String>(message, HttpStatus.CONFLICT);
         }
         boolean created = appUserService.addNewUser(user);
+        log.info("user : " + user.getUsername() + " created!");
         return new ResponseEntity<String>("New user created!", HttpStatus.CREATED);
     }
 
     @DeleteMapping(path = "{username}")
-    public ResponseEntity<String> deleteUser(@PathVariable("username") String username, HttpServletResponse response) throws Exception {
+    public ResponseEntity<String> deleteUser(@RequestHeader(AUTHORIZATION) String authorizationHeader, @PathVariable("username") String username, HttpServletResponse response) throws Exception {
         try {
-            appUserService.deleteUser(username);
-            return new ResponseEntity<String>("User " + username + " deleted!", HttpStatus.OK);
-        } catch (Exception exception) {
-            AuthUtils.authErrorLogger(response, HttpStatus.NOT_FOUND, exception);
-            return new ResponseEntity<String>("Failed to delete user!", HttpStatus.NOT_FOUND);
+            String accessToken = authorizationHeader.substring("Bearer ".length());
+            log.info("Access Token : " + accessToken);
+            DecodedJWT decodedJWT = AuthUtils.createDecodedJWT(authorizationHeader);
+            String usernameFromToken = decodedJWT.getSubject();
+            String[] roles = decodedJWT.getClaim("roles").asArray(String.class);
+            log.info(usernameFromToken);
+            log.info(username);
+            log.info(Arrays.toString(roles));
+            if (usernameFromToken.equals(username) || stream(roles).anyMatch(role -> role.equalsIgnoreCase("ADMIN"))) {
+                appUserService.deleteUser(username);
+                return new ResponseEntity<String>("User " + username + " deleted", HttpStatus.OK);
+            }
+            return new ResponseEntity<String>("Not authorized to delete user : " + username , METHOD_NOT_ALLOWED);
+        } catch (UsernameNotFoundException exception) {
+            AuthUtils.authErrorLogger(response, NOT_FOUND, exception);
+            return new ResponseEntity<String>("User " + username + " not found", NOT_FOUND);
+        }
+        catch (Exception exception) {
+            AuthUtils.authErrorLogger(response, INTERNAL_SERVER_ERROR, exception);
+            return new ResponseEntity<String>("Failed to delete user", INTERNAL_SERVER_ERROR);
         }
     }
 

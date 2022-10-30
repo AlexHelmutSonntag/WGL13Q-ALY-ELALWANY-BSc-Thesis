@@ -13,6 +13,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>server</name>
     <description>Peer-to-Peer Video transmission web app using WebRTC</description>
+
     <properties>
         <java.version>18</java.version>
     </properties>
@@ -121,6 +122,7 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                    <systemPropertyVariables>src/test/resources/test.properties</systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>

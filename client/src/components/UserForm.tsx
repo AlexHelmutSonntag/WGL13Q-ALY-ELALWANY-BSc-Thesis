@@ -17,6 +17,7 @@ import {Visibility, VisibilityOff} from "@mui/icons-material";
 import React from "react";
 import {Gender, Role, UpdateUserState, UserState} from "../Types";
 import {validateEmail, validatePasswordInput} from "../Utils";
+import "../style/UserForm.scss";
 
 const styleColors: any = {
     textInput: 'rgba(255,255,255,0.7)',
@@ -50,6 +51,8 @@ export const UserForm: React.FC<UpdateUserState & Style> = (props) => {
 
     const handleChange =
         (prop: keyof UserState) => (event: React.ChangeEvent<HTMLInputElement> | any) => {
+            const targetElement = event.target;
+            console.log(targetElement)
             values.passwordsEqual = validatePasswordInput(values.password, values.repeatedPassword);
             values.validEmail = validateEmail(values.email);
             setValues({...values, [prop]: event.target.value});
@@ -200,8 +203,9 @@ export const UserForm: React.FC<UpdateUserState & Style> = (props) => {
                                 },
                             }}
                             variant="outlined">
-                            <InputLabel required htmlFor="password-input">Password</InputLabel>
+                            <InputLabel  htmlFor="password-input">Password</InputLabel>
                             <OutlinedInput
+                                // required
                                 id="password-input"
                                 type={values.showPassword ? 'text' : 'password'}
                                 value={values.password}
@@ -235,8 +239,9 @@ export const UserForm: React.FC<UpdateUserState & Style> = (props) => {
                                 },
                             }}
                             variant="outlined">
-                            <InputLabel required htmlFor="repeat-password-input">Repeat Password</InputLabel>
+                            <InputLabel htmlFor="repeat-password-input">Repeat Password</InputLabel>
                             <OutlinedInput
+                                // required
                                 id="repeat-password-input"
                                 type={values.showPassword ? 'text' : 'password'}
                                 value={values.repeatedPassword}
