@@ -51,7 +51,7 @@ export const validatePasswordSecurity = (password:string) => {
     .{8}                      Ensure string is of length 8.
     $                         End anchor.
      */
-    const re = /^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$/;
+    const re = /^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*.])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8,}$/;
     return re.test(password);
 }
 

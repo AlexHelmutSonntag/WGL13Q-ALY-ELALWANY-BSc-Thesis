@@ -4,6 +4,7 @@ import com.elte.wgl13q_thesis.server.model.AppUser;
 import com.elte.wgl13q_thesis.server.model.AppUserRole;
 import com.elte.wgl13q_thesis.server.repo.AppUserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.common.util.impl.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -97,10 +98,14 @@ public class AppUserService implements UserDetailsService {
 //                    log.info("User with username  {} deleted", user.getUsername());
 //                }
             } else {
-                log.info("User with username  {} not present", username);
+                log.info("User with username {} not present", username);
+                throw new UsernameNotFoundException("User with username " + username + " does not exist");
             }
+        } catch (UsernameNotFoundException exception) {
+            throw new UsernameNotFoundException("User with username " + username + " does not exist");
         } catch (Exception exception) {
-            throw new IllegalStateException("User with username " + username + " does not exist");
+            log.info("Illegal state exception when dealing with user {}", username);
+            throw new IllegalStateException(exception.getMessage());
         }
     }
 
@@ -109,7 +114,7 @@ public class AppUserService implements UserDetailsService {
         if (exists) {
             appUserRepository.deleteById(userId);
         } else {
-            throw new IllegalStateException("User with id " + userId + " does not exist");
+            throw new UsernameNotFoundException("User with id " + userId + " does not exist");
         }
     }
 

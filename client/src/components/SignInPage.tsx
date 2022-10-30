@@ -1,7 +1,7 @@
-import React, {useState} from "react";
+import React, {useRef, useState} from "react";
 import qs from 'qs';
 import {Navigate, useNavigate} from 'react-router-dom';
-
+import "../style/SignInPage.scss";
 import {
     Box,
     Container,
@@ -38,6 +38,9 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
     const dispatch = useAppDispatch()
     const accessToken = useAppSelector(selectToken)
     const user = useAppSelector(selectUser);
+    const [displayMsg, setDisplayMsg] = React.useState<String>("");
+    const displayMsgRef = useRef<HTMLDivElement>(null);
+
     const [values, setValues] = React.useState<LoginState>({
         email: '',
         username: '',
@@ -55,9 +58,10 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
         return re.test(email);
     };
 
+
     const handleChange =
         (prop: keyof Partial<LoginState>) => (event: React.ChangeEvent<HTMLInputElement> | any) => {
-            values.validEmail = validateEmail(values.email);
+
             setValues({...values, [prop]: event.target.value});
         };
 
@@ -73,9 +77,10 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
     };
 
     const sendSignInRequest: any = async (body: any) => {
+
         if (body.password !== "") {
             let params: any = {
-                username: body.username, password: body.password
+                username: body.username.trim(), password: body.password.trim()
             }
             await axios({
                 method: 'post',
@@ -96,9 +101,18 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
                     }
                     fetchUserDetails(params.username, config);
                     navigate("/home");
-
                 }
-            }).catch(err => console.log(err));
+            }).catch(err => {
+                console.log(err)
+                let statusCode = err.response.status
+                console.log(statusCode)
+                if (statusCode === 403) {
+                    displayMsgRef.current!.style.display="block";
+                    displayMsgRef.current!.style.borderColor="red";
+
+                    setDisplayMsg("Wrong username or password!")
+                }
+            });
         }
     }
 
@@ -163,7 +177,8 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
                         },
                     }}>
 
-                        <TextField required id="username-field" value={values.username}
+                        <TextField
+                                   required id="username-input" value={values.username}
                                    onChange={handleChange('username')} label="Username"
                                    variant="outlined"/>
                         <FormControl
@@ -179,6 +194,7 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
                             variant="outlined">
                             <InputLabel required htmlFor="password-input">Password</InputLabel>
                             <OutlinedInput
+                                required
                                 id="password-input"
                                 type={values.showPassword ? 'text' : 'password'}
                                 value={values.password}
@@ -207,6 +223,7 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
                             style={{color: "rgba(255, 255, 255, 0.7)", paddingBottom: "20px", paddingTop: "10px"}}>Don't have an account ? <a
                             href="/signup"
                             style={{paddingLeft: '2px', fontWeight: "bold", color: "#5BC0BE"}}>Sign up</a></span>
+                        <div ref={displayMsgRef} className={"msg-display"}>{displayMsg}</div>
                     </Box>
                 </Container>
             </div>
