@@ -7,6 +7,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import lombok.extern.slf4j.Slf4j;
+import org.hamcrest.Matcher;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Assertions;
@@ -196,7 +197,7 @@ public class AppUserControllerTest {
     }
 
     @Test
-    public void shouldAdminGetAllUsers() throws IOException {
+    public void shouldGetAllUsersAsAdmin() throws IOException {
 
         authSetupWithCredentials(AUTH_ADMIN_USERNAME, AUTH_ADMIN_SECRET);
         String accessToken = env.get("access_token");
@@ -516,7 +517,7 @@ public class AppUserControllerTest {
     }
 
     @Test
-    public void shouldAdminDeleteUser() {
+    public void shouldDeleteUserAsAdmin() {
         String username = "test_user";
         String password = "test_user_password";
         String firstName = "Test";
@@ -528,8 +529,9 @@ public class AppUserControllerTest {
 
         createTestUser(username, password, firstName, lastName, userRole, email, gender, dob);
 
-        authSetupWithCredentials(AUTH_ADMIN_USERNAME, AUTH_ADMIN_SECRET);
+        authSetupWithCredentials(username, password);
         String accessToken = env.get("access_token");
+        log.info(accessToken);
         Response response =
                 given()
                         .contentType(ContentType.JSON)
@@ -545,7 +547,7 @@ public class AppUserControllerTest {
     }
 
     @Test
-    public void shouldFailOnAdminDeleteUserWithUserNotFound() {
+    public void shouldFailOnDeleteUserWithUserNotFoundAsAdmin() {
         authSetupWithCredentials(AUTH_ADMIN_USERNAME, AUTH_ADMIN_SECRET);
         String accessToken = env.get("access_token");
         String username = "non_existing_user";
@@ -576,7 +578,6 @@ public class AppUserControllerTest {
 
         createTestUser(username, password, firstName, lastName, userRole, email, gender, dob);
 
-
         RequestSpecification request =
                 RestAssured.given()
                         .header("Content-type", "application/x-www-form-urlencoded; charset=utf-8")
@@ -598,5 +599,232 @@ public class AppUserControllerTest {
 
         Assertions.assertEquals(HTTP_FORBIDDEN, response.getStatusCode());
     }
+
+    @Test
+    public void shouldUpdateUser(){
+        String username = "test_user";
+        String password = "test_user_password";
+        String firstName = "Test";
+        String lastName = "User";
+        String email = "test_user@email.com";
+        AppUserRole role = AppUserRole.USER;
+        Gender gender = Gender.MALE;
+        LocalDate dob = LocalDate.of(1995, 1, 8);
+
+        createTestUser(username, password, firstName, lastName, role, email, gender, dob);
+
+        authSetupWithCredentials(username,password);
+        String accessToken = env.get("access_token");
+
+        firstName = "new_firstName";
+        lastName = "new_lastName";
+        password = "new_password";
+        email = "new_email";
+        gender = Gender.FEMALE;
+        dob = LocalDate.of(1999, 1, 8);
+
+        AppUser appUser = new AppUser(
+                username,
+                password,
+                firstName,
+                lastName,
+                role,
+                dob,
+                email,
+                gender);
+
+        Response response =
+                given()
+                        .contentType(ContentType.JSON)
+                        .auth()
+                        .oauth2(accessToken)
+                        .body(appUser)
+                        .when()
+                        .put("/api/v1/user/updateUser/"+username)
+                        .then()
+                        .log().body()
+                        .extract().response();
+
+        log.info(String.valueOf(response.getStatusCode()));
+        Assertions.assertEquals(HTTP_OK,response.getStatusCode());
+
+        String fetchedFirstName = response.jsonPath().get("firstName");
+        String fetchedLastName = response.jsonPath().get("lastName");
+        String fetchedEmail = response.jsonPath().get("email");
+        String fetchedRole  = response.jsonPath().get("role");
+        String fetchedGender  = response.jsonPath().get("gender");
+        String fetchedDob  = response.jsonPath().get("dob");
+
+        Assertions.assertEquals(firstName,fetchedFirstName);
+        Assertions.assertEquals(lastName,fetchedLastName);
+        Assertions.assertEquals(email,fetchedEmail);
+        Assertions.assertEquals(role,AppUserRole.valueOf(fetchedRole));
+        Assertions.assertEquals(dob.toString(),fetchedDob);
+        Assertions.assertEquals(gender,Gender.valueOf(fetchedGender));
+
+        authSetupWithCredentials(AUTH_ADMIN_USERNAME, AUTH_ADMIN_SECRET);
+        removeUser(username);
+    }
+    @Test
+    public void shouldUpdateUserAsAdmin() {
+        String username = "test_user";
+        String password = "test_user_password";
+        String firstName = "Test";
+        String lastName = "User";
+        String email = "test_user@email.com";
+        AppUserRole role = AppUserRole.USER;
+        Gender gender = Gender.MALE;
+        LocalDate dob = LocalDate.of(1995, 1, 8);
+
+        createTestUser(username, password, firstName, lastName, role, email, gender, dob);
+
+        firstName = "new_firstName";
+        lastName = "new_lastName";
+        password = "new_password";
+        email = "new_email";
+        gender = Gender.FEMALE;
+        dob = LocalDate.of(1999, 1, 8);
+
+        AppUser appUser = new AppUser(
+                username,
+                password,
+                firstName,
+                lastName,
+                role,
+                dob,
+                email,
+                gender);
+
+        authSetupWithCredentials(AUTH_ADMIN_USERNAME,AUTH_ADMIN_SECRET);
+        String accessToken = env.get("access_token");
+
+        Response response =
+                given()
+                        .contentType(ContentType.JSON)
+                        .auth()
+                        .oauth2(accessToken)
+                        .body(appUser)
+                        .when()
+                        .put("/api/v1/user/updateUser/"+username)
+                        .then()
+                        .log().body()
+                        .extract().response();
+
+        log.info(String.valueOf(response.getStatusCode()));
+        Assertions.assertEquals(HTTP_OK,response.getStatusCode());
+
+        String fetchedFirstName = response.jsonPath().get("firstName");
+        String fetchedLastName = response.jsonPath().get("lastName");
+        String fetchedEmail = response.jsonPath().get("email");
+        String fetchedRole  = response.jsonPath().get("role");
+        String fetchedGender  = response.jsonPath().get("gender");
+        String fetchedDob  = response.jsonPath().get("dob");
+
+        Assertions.assertEquals(firstName,fetchedFirstName);
+        Assertions.assertEquals(lastName,fetchedLastName);
+        Assertions.assertEquals(email,fetchedEmail);
+        Assertions.assertEquals(role,AppUserRole.valueOf(fetchedRole));
+        Assertions.assertEquals(dob.toString(),fetchedDob);
+        Assertions.assertEquals(gender,Gender.valueOf(fetchedGender));
+
+        authSetupWithCredentials(AUTH_ADMIN_USERNAME, AUTH_ADMIN_SECRET);
+        removeUser(username);
+    }
+
+    @Test
+    public void shouldFailOnUpdatingUserWithForbidden(){
+        //Create user
+        String username = "test_user";
+        String password = "test_user_password";
+        String firstName = "Test";
+        String lastName = "User";
+        String email = "test_user@email.com";
+        AppUserRole role = AppUserRole.USER;
+        Gender gender = Gender.MALE;
+        LocalDate dob = LocalDate.of(1995, 1, 8);
+
+        createTestUser(username, password, firstName, lastName, role, email, gender, dob);
+
+        //User new data
+        AppUser appUser = new AppUser(
+                "different_username",
+                "different_password",
+                "different_firstname",
+                "different_lastname",
+                role,
+                LocalDate.of(1999,12,31),
+                "different@email.com",
+                Gender.FEMALE);
+
+        //Another user
+        String max_username = "max";
+        String max_password = "max_password";
+        String max_firstName = "Max";
+        String max_lastName = "Payne";
+        AppUserRole max_role = AppUserRole.USER;
+        String max_email = "max@email.com";
+        Gender max_gender = Gender.MALE;
+        LocalDate max_dob = LocalDate.of(1994, 1, 8);
+
+        createTestUser(max_username, max_password, max_firstName, max_lastName, max_role, max_email, max_gender, max_dob);
+
+        authSetupWithCredentials(max_username,max_password);
+        String accessToken = env.get("access_token");
+
+        Response response =
+                given()
+                        .contentType(ContentType.JSON)
+                        .auth()
+                        .oauth2(accessToken)
+                        .body(appUser)
+                        .when()
+                        .put("/api/v1/user/updateUser/"+username)
+                        .then()
+                        .log().body()
+                        .extract().response();
+
+        //Unauthorized user
+        log.info(String.valueOf(response.getStatusCode()));
+        Assertions.assertEquals(HTTP_FORBIDDEN,response.getStatusCode());
+
+        authSetupWithCredentials(AUTH_ADMIN_USERNAME, AUTH_ADMIN_SECRET);
+        removeUser(username);
+        removeUser(max_username);
+    }
+
+    @Test
+    public void shouldFailOnUpdatingNonExistingUser(){
+        AppUser appUser = new AppUser(
+                "different_username",
+                "different_password",
+                "different_firstname",
+                "different_lastname",
+                AppUserRole.USER,
+                LocalDate.of(1999,12,31),
+                "different@email.com",
+                Gender.FEMALE);
+
+        authSetupWithCredentials(AUTH_ADMIN_USERNAME,AUTH_ADMIN_SECRET);
+        String accessToken = env.get("access_token");
+        Response response =
+                given()
+                        .contentType(ContentType.JSON)
+                        .auth()
+                        .oauth2(accessToken)
+                        .body(appUser)
+                        .when()
+                        .put("/api/v1/user/updateUser/"+appUser.getUsername())
+                        .then()
+                        .log().body()
+                        .extract().response();
+
+        log.info(String.valueOf(response.getStatusCode()));
+        Assertions.assertEquals(HTTP_NOT_FOUND,response.getStatusCode());
+
+    }
+
+
+
+
 
 }

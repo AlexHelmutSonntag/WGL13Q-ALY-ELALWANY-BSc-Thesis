@@ -70,7 +70,7 @@ public class AppUserService implements UserDetailsService {
                 return userOptional.get();
             }
         } catch (IllegalStateException e) {
-            throw new IllegalStateException("User with username " + username + " does not exist");
+            throw new UsernameNotFoundException("User with username " + username + " does not exist");
         }
         return null;
     }

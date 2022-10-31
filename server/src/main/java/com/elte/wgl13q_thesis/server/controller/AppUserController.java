@@ -98,8 +98,8 @@ public class AppUserController {
             String accessToken = authorizationHeader.substring("Bearer ".length());
             log.info("Access Token : " + accessToken);
             DecodedJWT decodedJWT = AuthUtils.createDecodedJWT(authorizationHeader);
-            String usernameFromToken = decodedJWT.getSubject();
-            String[] roles = decodedJWT.getClaim("roles").asArray(String.class);
+            String usernameFromToken = AuthUtils.getUsernameFromDecodedJWT(decodedJWT);
+            String[] roles = AuthUtils.getRolesFromDecodedJWT(decodedJWT);
             log.info(usernameFromToken);
             log.info(username);
             log.info(Arrays.toString(roles));
@@ -107,12 +107,11 @@ public class AppUserController {
                 appUserService.deleteUser(username);
                 return new ResponseEntity<String>("User " + username + " deleted", HttpStatus.OK);
             }
-            return new ResponseEntity<String>("Not authorized to delete user : " + username , METHOD_NOT_ALLOWED);
+            return new ResponseEntity<String>("Not authorized to delete user : " + username, METHOD_NOT_ALLOWED);
         } catch (UsernameNotFoundException exception) {
             AuthUtils.authErrorLogger(response, NOT_FOUND, exception);
             return new ResponseEntity<String>("User " + username + " not found", NOT_FOUND);
-        }
-        catch (Exception exception) {
+        } catch (Exception exception) {
             AuthUtils.authErrorLogger(response, INTERNAL_SERVER_ERROR, exception);
             return new ResponseEntity<String>("Failed to delete user", INTERNAL_SERVER_ERROR);
         }
@@ -129,15 +128,34 @@ public class AppUserController {
 //    }
 
     @PutMapping(path = "/updateUser/{username}")
-    public ResponseEntity<String> updateUserDetails(@PathVariable("username") String username,
-                                                    @RequestBody AppUser appUser, HttpServletResponse response) throws Exception {
-
+    public ResponseEntity<?> updateUserDetails(@RequestHeader(AUTHORIZATION) String authorizationHeader, @PathVariable("username") String username,
+                                               @RequestBody AppUser appUser, HttpServletResponse response) throws Exception {
         try {
-            appUserService.updateUser(username, appUser);
-            return new ResponseEntity<String>("User updated!", HttpStatus.OK);
+            String accessToken = authorizationHeader.substring("Bearer ".length());
+            log.info("Access Token : " + accessToken);
+            DecodedJWT decodedJWT = AuthUtils.createDecodedJWT(authorizationHeader);
+            String usernameFromToken = AuthUtils.getUsernameFromDecodedJWT(decodedJWT);
+            String[] roles = AuthUtils.getRolesFromDecodedJWT(decodedJWT);
+            log.info(usernameFromToken);
+            log.info(username);
+            log.info(Arrays.toString(roles));
+            AppUser userFromDB = appUserService.fetchUserFromDB(username);
+            if (userFromDB == null) {
+                throw new UsernameNotFoundException("User " + username + " does not exist");
+            }
+            if (usernameFromToken.equals(username) || stream(roles).anyMatch(role -> role.equalsIgnoreCase("ADMIN"))) {
+                appUserService.updateUser(username, appUser);
+                AppUser updatedAppUser = appUserService.fetchUserFromDB(username);
+                return new ResponseEntity<AppUser>(updatedAppUser, HttpStatus.OK);
+            }
+            AuthUtils.authErrorLogger(response, FORBIDDEN, new Exception("Not authorized to update the user"));
+            return new ResponseEntity<String>("Cannot update user", FORBIDDEN);
+        } catch (UsernameNotFoundException exception) {
+            AuthUtils.authErrorLogger(response, NOT_FOUND, exception);
+            return new ResponseEntity<String>("User does not exist", NOT_FOUND);
         } catch (Exception exception) {
-            AuthUtils.authErrorLogger(response, FORBIDDEN, exception);
-            return new ResponseEntity<String>("Cannot update user!", FORBIDDEN);
+            AuthUtils.authErrorLogger(response, INTERNAL_SERVER_ERROR, exception);
+            return new ResponseEntity<String>("Cannot update user!", INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -185,7 +203,7 @@ public class AppUserController {
                 AuthUtils.authErrorLogger(response, FORBIDDEN, exception);
             }
         } else {
-            response.setHeader("error ", "Refresh token is missing");
+            response.setHeader("error", "Refresh token is missing");
             response.setStatus(UNAUTHORIZED.value());
             Map<String, String> errors = new HashMap<>();
             errors.put("error:", "Refresh token is missing");
@@ -201,4 +219,5 @@ public class AppUserController {
     ) {
         appUserService.updateUserRole(userId, role);
     }
+
 }
