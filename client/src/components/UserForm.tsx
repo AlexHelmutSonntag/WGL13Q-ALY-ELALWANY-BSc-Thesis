@@ -16,7 +16,7 @@ import {DesktopDatePicker} from "@mui/x-date-pickers/DesktopDatePicker";
 import {Visibility, VisibilityOff} from "@mui/icons-material";
 import React from "react";
 import {Gender, Role, UpdateUserState, UserState} from "../Types";
-import {validateEmail, validatePasswordInput} from "../Utils";
+import {isValidEmail, validatePasswordInput} from "../Utils";
 import "../style/UserForm.scss";
 
 const styleColors: any = {
@@ -54,7 +54,7 @@ export const UserForm: React.FC<UpdateUserState & Style> = (props) => {
             const targetElement = event.target;
             console.log(targetElement)
             values.passwordsEqual = validatePasswordInput(values.password, values.repeatedPassword);
-            values.validEmail = validateEmail(values.email);
+            values.validEmail = isValidEmail(values.email);
             setValues({...values, [prop]: event.target.value});
             handleDateChange(values.dob);
         };

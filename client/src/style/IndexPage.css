@@ -6,13 +6,13 @@
 #index-container #index-header {
   padding-top: 10px;
 }
-#index-container h1, #index-container h2 {
+#index-container h1, #index-container h2, #index-container h3 {
   max-width: 40%;
   -webkit-text-stroke: 1.5px #0B132B;
   font-weight: 800;
   font-style: italic;
   font-size: 2.2em;
-  margin-left: 1.5rem;
+  padding-left: 2rem;
 }
 #index-container h2 {
   max-width: fit-content;
@@ -42,10 +42,22 @@
 }
 #index-container #example-section {
   background-color: #334661;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  padding-bottom: 2rem;
+}
+#index-container #example-section h3 {
+  max-width: 100%;
+  padding-left: 0;
+}
+#index-container #example-section img {
+  border-radius: 10px;
 }
 #index-container #author-section {
-  background-color: #334661;
   display: flex;
+  padding-left: 2rem;
 }
 #index-container #author-section h2 {
   max-width: 70%;

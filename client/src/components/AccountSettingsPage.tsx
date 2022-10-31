@@ -1,9 +1,15 @@
-import React from "react";
+import React, {useRef, useState} from "react";
 import {AuthenticatedUser, Gender, UserState} from "../Types";
 import {UserForm} from "./UserForm";
 import {ReturnFormButton, RedFormButton, DiscardFormButton} from "./FormButton";
 import {Navigate, useNavigate} from 'react-router-dom';
-import {validateEmail} from "../Utils";
+import {
+    isValidEmail,
+    validateFullName,
+    validatePasswordInput,
+    isPasswordSecure,
+    validateBothNames, validateUsername, validateEmail, validatePasswords, validatePasswordSecurity
+} from "../Utils";
 import axios from "axios";
 import {useAppDispatch, useAppSelector} from "../store/hooks";
 import {
@@ -16,12 +22,16 @@ import {
     setLastname,
 } from "../feature/user/userSlice";
 import {removeToken, selectToken} from "../feature/token/tokenSlice";
+import {FormInputMessageContainer} from "./FormInputMessageContainer";
+import "../style/AccountSettingsPage.scss"
 
 export const AccountSettingsPage: React.FC<AuthenticatedUser> = (props: AuthenticatedUser) => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const user = useAppSelector(selectUser);
     const accessToken = useAppSelector(selectToken);
+    const msgDisplayRef = useRef<HTMLDivElement>(null);
+    const [updateUserMessage, setUpdateUserMessage] = useState<String>("Please follow the rules below");
     if (!user.isAuthenticated) {
         return <Navigate to={"/login"}/>
     }
@@ -43,35 +53,49 @@ export const AccountSettingsPage: React.FC<AuthenticatedUser> = (props: Authenti
     }
 
     const updateUserData = (body: any) => {
-        // console.log(`dob : ${body.dob}`);
-        // console.log(`dob : ${body.dob.toLocaleDateString()}`);
         let dd_mm_yyyy = body.dob.toLocaleDateString();
         let dob = dd_mm_yyyy.replace(/(\d+)\/(\d+)\/(\d+)/g, "$3-$2-$1");
-        if (validateEmail(body.email)) {
-            let payload = {
-                firstName: body.firstName,
-                lastName: body.lastName,
-                password: body.password,
-                email: body.email,
-                dob: dob,
-                gender: body.gender
-            }
-            axios.put(`https://192.168.0.218:8080/api/v1/user/updateUser/${body.username}`,
-                payload,
-                config,
-            ).then((response) => {
-                    console.log(response);
-                    if (response.status === 200) {
-                        dispatch(setFirstname(payload.firstName))
-                        dispatch(setLastname(payload.lastName))
-                        dispatch(setEmail(payload.email))
-                        dispatch(setGender(payload.gender))
-                        dispatch(setDOB(payload.dob))
-                        alert("User Updated!");
-                    }
-                }
-            ).catch((error) => console.log(error));
+
+        if (!validateBothNames(body.firstName, body.lastName, msgDisplayRef, setUpdateUserMessage)) {
+            return;
         }
+        if (!validateEmail(body.email, msgDisplayRef, setUpdateUserMessage)) {
+            return;
+        }
+        if (body.password || body.repeatedPassword) {
+            if (!validatePasswords(body.password, body.repeatedPassword, msgDisplayRef, setUpdateUserMessage)) {
+                return;
+            }
+            if (!validatePasswordSecurity(body.password, body.repeatedPassword, msgDisplayRef, setUpdateUserMessage)) {
+                return;
+            }
+        }
+
+        let payload = {
+            firstName: body.firstName,
+            lastName: body.lastName,
+            password: body.password,
+            email: body.email,
+            dob: dob,
+            gender: body.gender
+        }
+        axios.put(`https://192.168.0.218:8080/api/v1/user/updateUser/${user.username}`,
+            payload,
+            config,
+        ).then((response) => {
+                console.log(response);
+                if (response.status === 200) {
+                    dispatch(setFirstname(payload.firstName))
+                    dispatch(setLastname(payload.lastName))
+                    dispatch(setEmail(payload.email))
+                    dispatch(setGender(payload.gender))
+                    dispatch(setDOB(payload.dob))
+                    msgDisplayRef.current!.classList.remove("fail")
+                    msgDisplayRef.current!.classList.add("success")
+                    setUpdateUserMessage("User Updated!")
+                }
+            }
+        ).catch((error) => console.log(error));
     }
 
     const deleteUser = (body: any) => {
@@ -115,6 +139,9 @@ export const AccountSettingsPage: React.FC<AuthenticatedUser> = (props: Authenti
             >
                 Delete account
             </RedFormButton>
+            <div ref={msgDisplayRef} className={"msg-display-settings"}>{updateUserMessage}</div>
+
         </div>
+        <FormInputMessageContainer/>
     </div>)
 }

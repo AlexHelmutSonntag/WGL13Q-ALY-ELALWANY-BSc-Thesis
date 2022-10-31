@@ -8,6 +8,13 @@
   inputcolor: rgba(255, 255, 255, 0.7);
 }
 
+.App .success {
+  border: 1px solid #00ff0d;
+}
+.App .fail {
+  border: 1px solid #ff0000;
+}
+
 * {
   font-family: "open Sans";
 }

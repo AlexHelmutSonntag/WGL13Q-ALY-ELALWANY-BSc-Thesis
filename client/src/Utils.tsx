@@ -4,32 +4,32 @@ import {Language, ProficiencyLevel} from "./Types";
 import {MenuItem} from "@mui/material";
 import React from "react";
 
-export const stringToDate = (date:String) => {
+export const stringToDate = (date: String) => {
     let dd_mm_yyyy = date;
-    return  dd_mm_yyyy.replace(/(\d+)\/(\d+)\/(\d+)/g, "$3-$2-$1");
+    return dd_mm_yyyy.replace(/(\d+)\/(\d+)\/(\d+)/g, "$3-$2-$1");
 }
 
-export const validateEmail = (email: string) => {
+export const isValidEmail = (email: string) => {
     const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
 };
 
 
-export const validateUsername = (username: string) =>{
+export const isValidUsername = (username: string) => {
     const re = /^[a-zA-Z0-9]+([_ -]?[a-zA-Z0-9])*$/
     return re.test(username);
 }
 
-export const validateFullName = (firstName : string, lastName: string) =>{
+export const validateFullName = (firstName: string, lastName: string) => {
     return validateName(firstName) && validateName(lastName);
 }
 
-export const validateName = (name:string) => {
+export const validateName = (name: string) => {
     const re = /^[A-Z]+[a-z]*/;
     return re.test(name);
 }
 
-export const generateUuid = () =>{
+export const generateUuid = () => {
     return uuidv4();
 }
 
@@ -41,7 +41,7 @@ Password strength criteria is as below :
     2 numerals (0-9)
     3 letters in Lower Case
  */
-export const validatePasswordSecurity = (password:string) => {
+export const isPasswordSecure = (password: string) => {
     /*
     ^                         Start anchor
     (?=.*[A-Z].*[A-Z])        Ensure string has two uppercase letters.
@@ -107,8 +107,66 @@ export const languageOptions = () => {
     return list.map(language => <MenuItem value={language}>{language}</MenuItem>);
 }
 
-export const capacityOptions = () =>{
- return [0, 1, 2].map((capacity) => {
+export const capacityOptions = () => {
+    return [0, 1, 2].map((capacity) => {
         return <MenuItem value={capacity}>{capacity}</MenuItem>
     });
 }
+
+
+export const validateBothNames = (firstName: string, lastName: string, msgDisplayRef: React.RefObject<HTMLDivElement>, setErrorMessage: React.Dispatch<React.SetStateAction<String>>) => {
+    if (!firstName || !lastName) {
+        setErrorMessage('A name cannot be empty');
+        msgDisplayRef.current!.classList.add("fail");
+        return false;
+    }
+    if (!validateFullName(firstName, lastName)) {
+        setErrorMessage('The first and last names need to start with an uppercase letter');
+        msgDisplayRef.current!.classList.add("fail");
+        return false;
+    }
+    return true;
+}
+export const validateUsername = (username: string, msgDisplayRef: React.RefObject<HTMLDivElement>, setErrorMessage: React.Dispatch<React.SetStateAction<String>>) => {
+    if (!isValidUsername(username)) {
+        setErrorMessage('The username cannot be empty');
+        msgDisplayRef.current!.classList.add("fail");
+        return false;
+    }
+    return true;
+}
+export const validateEmail = (email: string, msgDisplayRef: React.RefObject<HTMLDivElement>, setErrorMessage: React.Dispatch<React.SetStateAction<String>>) => {
+    if (!isValidEmail(email)) {
+        setErrorMessage('The email is invalid');
+        msgDisplayRef.current!.classList.add("fail");
+        return false;
+    }
+    return true;
+}
+
+export const validatePasswords = (password: string, repeatedPassword: string, msgDisplayRef: React.RefObject<HTMLDivElement>, setErrorMessage: React.Dispatch<React.SetStateAction<String>>) => {
+    if (!password || !repeatedPassword) {
+        setErrorMessage('A password cannot be empty');
+        msgDisplayRef.current!.classList.add("fail");
+        return false;
+    }
+    if (password.trim() !== repeatedPassword.trim()) {
+        console.log(password.trim())
+        console.log(repeatedPassword.trim())
+        setErrorMessage('The passwords inputted do not match');
+        msgDisplayRef.current!.classList.add("fail");
+        return false;
+    }
+    return true;
+}
+
+export const validatePasswordSecurity = (password: string, repeatedPassword: string, msgDisplayRef: React.RefObject<HTMLDivElement>, setErrorMessage: React.Dispatch<React.SetStateAction<String>>) => {
+    if (!isPasswordSecure(password) && !isPasswordSecure(repeatedPassword)) {
+        setErrorMessage('The password does not follow the rules. Please revise it and enter the password again');
+        msgDisplayRef.current!.classList.add("fail");
+        return false;
+    }
+    return true;
+}
+
+

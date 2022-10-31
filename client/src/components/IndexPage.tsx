@@ -19,8 +19,10 @@ import flagIS from "../assets/images/flags/is-flag.png";
 import flagFL from "../assets/images/flags/fl-flag.png";
 import flagNO from "../assets/images/flags/no-flag.png";
 import flagCH from "../assets/images/flags/ch-flag.png";
+import chatroomImage from "../assets/images/index/chatroom-cam-off.png";
 import { Wrapper, Status } from "@googlemaps/react-wrapper";
 import {MapComponent} from "./MapComponent";
+import {Box} from "@mui/material";
 
 const mapAPIKey= "AIzaSyDfsM7jIiuj92Sy_CNLfY-QSiTPHkpZxRI"
 export const IndexPage: React.FC = () => {
@@ -60,7 +62,16 @@ export const IndexPage: React.FC = () => {
             <h2>Just signup and start using the app to improve your language skills!</h2>
         </div>
         <div id={"example-section"}>
-            <h3>Here you should show a snippet of a real chat room</h3>
+            <h3>Create a chat room and start practicing the language you want</h3>
+            <Box
+                component="img"
+                sx={{
+                    maxHeight: { xs: 433, md: 700 },
+                    maxWidth: { xs: 450, md: 800 },
+                }}
+                alt="The house from the offer."
+                src={chatroomImage}
+            />
         </div>
         <div id={"author-section"}>
             <h2>This platform was developed by Aly Elalwany; a fellow polyglot and language learner. For more information, find links to contact in the footer.</h2>

@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {Navigate, useNavigate} from "react-router-dom";
-import {useAppSelector} from "../store/hooks";
+import {useAppDispatch, useAppSelector} from "../store/hooks";
 import {selectUser} from "../feature/user/userSlice";
 import {RoomFilter} from "./RoomFilter";
 import {FilterState, Gender, Language, NewRoomState, ProficiencyLevel, RoomState, UserState} from "../Types";
@@ -175,6 +175,8 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
         createdAt: new Date(),
     });
 
+    const dispatch = useAppDispatch();
+
     const [rooms, setRooms] = React.useState<Array<RoomState>>([]);
     const [filterState, setFilterState] = React.useState<FilterState>({
         language: Language.GERMAN,
@@ -250,6 +252,7 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
     if (!user.isAuthenticated) {
         return <Navigate to={"/login"}/>
     }
+    console.log(user)
 
     const getRooms = () => {
         axios.get('https://192.168.0.218:8080/api/v1/room/all',

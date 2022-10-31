@@ -78,7 +78,7 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
 
     const sendSignInRequest: any = async (body: any) => {
 
-        if (body.password !== "") {
+        if (body.password.trim() !== "") {
             let params: any = {
                 username: body.username.trim(), password: body.password.trim()
             }
@@ -223,7 +223,7 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
                             style={{color: "rgba(255, 255, 255, 0.7)", paddingBottom: "20px", paddingTop: "10px"}}>Don't have an account ? <a
                             href="/signup"
                             style={{paddingLeft: '2px', fontWeight: "bold", color: "#5BC0BE"}}>Sign up</a></span>
-                        <div ref={displayMsgRef} className={"msg-display"}>{displayMsg}</div>
+                        <div ref={displayMsgRef} className={"msg-display-signin"}>{displayMsg}</div>
                     </Box>
                 </Container>
             </div>
