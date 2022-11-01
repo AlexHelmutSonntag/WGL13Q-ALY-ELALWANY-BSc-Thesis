@@ -2,7 +2,7 @@ import React, {PropsWithChildren, useEffect} from "react";
 import {GridColDef} from "@mui/x-data-grid"
 import {MenuItem, TextField} from "@mui/material";
 import {FilterState, Language, ProficiencyLevel} from "../Types";
-import {ApplyFilterButton, DiscardFormButton} from "./FormButton";
+import {ApplyFilterButton, DiscardFilterButton, DiscardFormButton} from "./FormButton";
 import {capacityOptions, languageOptions, levelOptions} from "../Utils";
 
 
@@ -207,10 +207,12 @@ export const RoomFilter: React.FC<FilterProps> = (props) => {
         >
             {capacityOptions()}
         </TextField>
-        <ApplyFilterButton onClick={() => filterDispatcher()}>Apply</ApplyFilterButton>
-        <DiscardFormButton style={{
+        <ApplyFilterButton  style={{
+            width: '5rem',
+        }} onClick={() => filterDispatcher()}>Apply</ApplyFilterButton>
+        <DiscardFilterButton style={{
             border: "1px solid #FFFFFF80",
-            width: '10ch',
-        }} onClick={()=> filterRemover()}>Remove</DiscardFormButton>
+            width: '5rem',
+        }} onClick={()=> filterRemover()}>Remove</DiscardFilterButton>
     </div>)
 }

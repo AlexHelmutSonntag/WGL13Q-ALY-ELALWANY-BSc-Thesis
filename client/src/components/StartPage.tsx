@@ -4,141 +4,26 @@ import {useAppDispatch, useAppSelector} from "../store/hooks";
 import {selectUser} from "../feature/user/userSlice";
 import {RoomFilter} from "./RoomFilter";
 import {FilterState, Gender, Language, NewRoomState, ProficiencyLevel, RoomState, UserState} from "../Types";
-import {Button, List, ListItem, ListItemButton, ListItemText, MenuItem, Modal, TextField} from "@mui/material";
+import {
+    Dialog, DialogActions, DialogContent, DialogContentText,
+    DialogTitle,
+    ListItem,
+    ListItemButton,
+    ListItemText, Paper, Table, TableCell, TableContainer, TableHead, TableRow,
+    TextField,
+} from "@mui/material";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import Popup from "reactjs-popup";
 import {DiscardFormButton, ReturnFormButton} from "./FormButton";
 import axios from "axios";
 import {selectClient} from "../feature/client/clientSlice";
 import {selectToken} from "../feature/token/tokenSlice";
 import {languageOptions, levelOptions} from "../Utils";
-
-const rows = [
-    {
-        language: Language.ENGLISH,
-        proficiencyLevel: ProficiencyLevel.ADVANCED,
-        capacity: 1,
-        createdAt: "10-09-2022",
-        roomId: "615e889c-e52f-4cb3-81a2-a17be13593c8",
-    },
-    {
-        language: Language.ENGLISH,
-        proficiencyLevel: ProficiencyLevel.ADVANCED,
-        capacity: 1,
-        createdAt: "10-09-2022",
-        roomId: "391d04b7-fea8-41c9-9e33-f56b54d463e2",
-    },
-    {
-        language: Language.ENGLISH,
-        proficiencyLevel: ProficiencyLevel.ADVANCED,
-        capacity: 1,
-        createdAt: "10-09-2022",
-        roomId: "2c56f22a-57e8-4a3f-97c3-dea33c075ece",
-    },
-    {
-        language: Language.ENGLISH,
-        proficiencyLevel: ProficiencyLevel.ADVANCED,
-        capacity: 1,
-        createdAt: "10-09-2022",
-        roomId: "cf2382c0-f518-4d7b-b351-8c944ff9b787",
-    },
-    {
-        language: Language.SPANISH,
-        proficiencyLevel: ProficiencyLevel.BEGINNER,
-        capacity: 1,
-        createdAt: "10-09-2022",
-        roomId: "cf2382c0-f518-4d7b-b351-8c944ff9b787",
-    },
-    {
-        language: Language.GERMAN,
-        proficiencyLevel: ProficiencyLevel.FLUENT,
-        capacity: 1,
-        createdAt: "10-09-2022",
-        roomId: "cf2382c0-f518-4d7b-b351-8c944ff9b787",
-    },
-    {
-        language: Language.HUNGARIAN,
-        proficiencyLevel: ProficiencyLevel.NATIVE,
-        capacity: 2,
-        createdAt: "10-09-2022",
-        roomId: "cf2382c0-f518-4d7b-b351-8c944ff9b787",
-    },
-    {
-        language: Language.GERMAN,
-        proficiencyLevel: ProficiencyLevel.ADVANCED,
-        capacity: 1,
-        createdAt: "10-09-2022",
-        roomId: "cf2382c0-f518-4d7b-b351-8c944ff9b787",
-    },
-    {
-        language: Language.GERMAN,
-        proficiencyLevel: ProficiencyLevel.ADVANCED,
-        capacity: 2,
-        createdAt: "10-09-2022",
-        roomId: "cf2382c0-f518-4d7b-b351-8c944ff9b787",
-    },
-    {
-        language: Language.GERMAN,
-        proficiencyLevel: ProficiencyLevel.ADVANCED,
-        capacity: 1,
-        createdAt: "10-09-2022",
-        roomId: "cf2382c0-f518-4d7b-b351-8c944ff9b787",
-    },
-    {
-        language: Language.FRENCH,
-        proficiencyLevel: ProficiencyLevel.ADVANCED,
-        capacity: 1,
-        createdAt: "10-09-2022",
-        roomId: "cf2382c0-f518-4d7b-b351-8c944ff9b787",
-    },
-    {
-        language: Language.FRENCH,
-        proficiencyLevel: ProficiencyLevel.ADVANCED,
-        capacity: 1,
-        createdAt: "10-09-2022",
-        roomId: "cf2382c0-f518-4d7b-b351-8c944ff9b787",
-    },
-    {
-        language: Language.FRENCH,
-        proficiencyLevel: ProficiencyLevel.ADVANCED,
-        capacity: 1,
-        createdAt: "10-09-2022",
-        roomId: "cf2382c0-f518-4d7b-b351-8c944ff9b787",
-    },
-    {
-        language: Language.FRENCH,
-        proficiencyLevel: ProficiencyLevel.ADVANCED,
-        capacity: 1,
-        createdAt: "10-09-2022",
-        roomId: "cf2382c0-f518-4d7b-b351-8c944ff9b787",
-    },
-    {
-        language: Language.FRENCH,
-        proficiencyLevel: ProficiencyLevel.ADVANCED,
-        capacity: 1,
-        createdAt: "10-09-2022",
-        roomId: "cf2382c0-f518-4d7b-b351-8c944ff9b787",
-    },
-    {
-        language: Language.FRENCH,
-        proficiencyLevel: ProficiencyLevel.ADVANCED,
-        capacity: 1,
-        createdAt: "10-09-2022",
-        roomId: "cf2382c0-f518-4d7b-b351-8c944ff9b787",
-    },
-    {
-        language: Language.FRENCH,
-        proficiencyLevel: ProficiencyLevel.ADVANCED,
-        capacity: 1,
-        createdAt: "10-09-2022",
-        roomId: "cf2382c0-f518-4d7b-b351-8c944ff9b787",
-    },
-]
+import {styled} from "@mui/material/styles";
 
 
-const renderRoomsList = (list: Array<RoomState>,filterState: FilterState,clickHandler: (item:RoomState) => any) => {
-    if(filterState.filter){
+const renderRoomsList = (list: Array<RoomState>, filterState: FilterState, clickHandler: (item: RoomState) => any) => {
+    if (filterState.filter) {
         console.log(`FILTER : ${filterState.language}\t${filterState.proficiencyLevel}\t${filterState.capacity} ${filterState.filter}`)
         list = list.filter(room => room.capacity === filterState.capacity && room.language === filterState.language && room.proficiencyLevel === filterState.proficiencyLevel);
     }
@@ -152,18 +37,79 @@ const renderRoomsList = (list: Array<RoomState>,filterState: FilterState,clickHa
             borderRadius: "10px",
             margin: "3px",
             backgroundColor: `rgba(58, 80, 107, 0.8)`,
-            wordSpacing: "190px",
             color: '#FFFFFF',
+            wordSpacing: "190px",
         }}>
-            <ListItemButton onClick={()=>clickHandler(item)}>
+            <ListItemButton onClick={() => clickHandler(item)}>
                 <ListItemText
                     primary={strList}/>
             </ListItemButton>
         </ListItem>
     })
 }
+const filterRooms = (list: Array<RoomState>, filterState: FilterState) => {
+    return list.filter(room => room.capacity === filterState.capacity && room.language === filterState.language && room.proficiencyLevel === filterState.proficiencyLevel);
+}
 
-interface StartPageProps{
+const renderRoomsTable = (list: Array<RoomState>, filterState: FilterState, clickHandler: (item: RoomState) => any) => {
+    if (filterState.filter) {
+        console.log(`FILTER : ${filterState.language}\t${filterState.proficiencyLevel}\t${filterState.capacity} ${filterState.filter}`)
+        list = filterRooms(list, filterState);
+    }
+
+    return (<TableContainer component={Paper}>
+        <Table sx={{minWidth: 1000}} aria-label="rooms table">
+            <TableHead>
+                <TableRow
+                    sx={{
+                        backgroundColor: `#1C2541`,
+                        '& .MuiTableCell-root': {
+                            color: '#FFFFFF',
+                        },
+                        border: "2px solid grey",
+                    }}
+                >
+                    <TableCell align="center">Language</TableCell>
+                    <TableCell align="center">Level</TableCell>
+                    <TableCell align="center">Capacity</TableCell>
+                    <TableCell align="center">Created</TableCell>
+                    <TableCell align="center">Room ID</TableCell>
+                </TableRow>
+                {list.map((item: RoomState) => (
+                    <TableRow key={item.language}
+                              sx={{
+                                  backgroundColor: `#3A506B`,
+                                  border: "2px solid grey",
+                                  '&:last-child td, &:last-child th': {
+                                      border: 0,
+                                  },
+                                  '&:hover': {
+                                      cursor: "pointer",
+                                      backgroundColor: "#DBE4EE",
+                                      '& .MuiTableCell-root': {
+                                          color: '#000000',
+                                      },
+                                  },
+                                  '& .MuiTableCell-root': {
+                                      color: '#FFFFFF',
+                                  },
+                              }}
+                              onClick={() => clickHandler(item)}
+                    >
+                        <TableCell align="center">{item.language}</TableCell>
+                        <TableCell align="center">{item.proficiencyLevel}</TableCell>
+                        <TableCell align="center">{item.capacity}</TableCell>
+                        <TableCell align="center">{item.createdAt.toString()}</TableCell>
+                        <TableCell align="center">{item.roomID}</TableCell>
+                    </TableRow>
+                ))}
+            </TableHead>
+        </Table>
+    </TableContainer>)
+}
+
+
+interface StartPageProps {
     passValuesToParent: (value: RoomState) => void;
 }
 
@@ -174,16 +120,18 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
         proficiencyLevel: ProficiencyLevel.BEGINNER,
         createdAt: new Date(),
     });
-
-    const dispatch = useAppDispatch();
-
     const [rooms, setRooms] = React.useState<Array<RoomState>>([]);
+    const [openCreateRoomDialog, setOpenCreateRoomDialog] = React.useState(false);
     const [filterState, setFilterState] = React.useState<FilterState>({
         language: Language.GERMAN,
         proficiencyLevel: ProficiencyLevel.BEGINNER,
         capacity: 1,
         filter: false,
     });
+
+    const handleClose = () => {
+        setOpenCreateRoomDialog(false);
+    };
 
     const client = useAppSelector(selectClient);
     const accessToken = useAppSelector(selectToken);
@@ -198,23 +146,20 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
     }
     const navigate = useNavigate();
 
-    const handleRoomClick = (room:RoomState)=>{
-        // console.log(JSON.stringify(room));
+    const handleRoomClick = (room: RoomState) => {
         props.passValuesToParent(room)
         navigate(`/room/${room.roomID}`);
-
     }
 
     const handleNewRoomChange = (prop: keyof NewRoomState) => (event: React.ChangeEvent<HTMLInputElement> | any) => {
         setNewRoomValue({...newRoomValue, [prop]: event.target.value});
     }
 
-    const [isModalVisible, setIsModalVisible] = useState(false);
     const addRoomHandler = () => {
-        setIsModalVisible(false);
+        setOpenCreateRoomDialog(false);
         console.log(newRoomValue)
         let payload = {
-            id: 10,
+            id: 10, // dummy id
             uuid: client.sessionId,
             language: newRoomValue.language,
             proficiencyLevel: newRoomValue.proficiencyLevel,
@@ -227,6 +172,7 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
                 console.log(response)
                 if (response.status === 201) {
                     alert("Room created");
+                    getRooms();
                 } else {
                     alert("Server error!");
                 }
@@ -240,12 +186,12 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
     let receiveFilter = (state: FilterState) => {
         console.log(state)
         setFilterState({
-            language : state.language,
+            language: state.language,
             proficiencyLevel: state.proficiencyLevel,
-            capacity : state.capacity,
+            capacity: state.capacity,
             filter: state.filter,
         })
-        renderRoomsList(rooms,state,handleRoomClick);
+        renderRoomsList(rooms, state, handleRoomClick);
     }
 
     const user = useAppSelector(selectUser);
@@ -279,7 +225,6 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
                         }
                         roomSet.add(roomObj);
                         setRooms(Array.from(roomSet));
-
                     })
                 }
             }
@@ -288,8 +233,7 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
             // alert(error.response.data.error_message);
         });
     }
-    // getRooms();
-    renderRoomsList(rooms,filterState,handleRoomClick);
+    renderRoomsList(rooms, filterState, handleRoomClick);
     return (
         <div id={"start-page"} style={{
             backgroundColor: '#3a506b',
@@ -303,60 +247,49 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
             <h1 style={{color: "#FFFFFF", paddingBottom: "30px"}}>
                 Available rooms
             </h1>
-            {/*
-              border-radius: 7px;
-              box-shadow: 0 0 32px rgba(0, 0, 0, .5);
-              padding: 40px;
-              width: 50px;
-              font-size: 26px;
-  */}
-            <Popup closeOnDocumentClick={false} open={isModalVisible} position="right center">
-                <div className={"popup-overlay"}
-                     style={{
-                         margin: "auto",
-                         backgroundColor: "#ffffff",
-                         padding: "15px",
-                         width: "100%",
-                         height: "10rem",
-                         display: "flex",
-                         justifyContent: "center",
-                         outline: "1px solid red",
-                         boxShadow: "rgba(0, 0, 0, 0.16) 0px 0px 3px",
-                     }}>
-                    <div className={"popup-content"}
-                         style={{
-                             padding: "15px",
-                             // outline: "1px solid blue",
-                         }}
-                    >
-                        <TextField id="language-field"
-                                   value={newRoomValue.language} label="Language"
-                                   onChange={handleNewRoomChange('language')}
-                                   select
-                                   variant="outlined">
-                            {languageOptions()}
-                        </TextField>
-                        <TextField id="level-field" value={newRoomValue.proficiencyLevel}
-                                   onChange={handleNewRoomChange('proficiencyLevel')}
-                                   select
-                                   label="Current level"
-                                   variant="outlined">
-                            {levelOptions()}
-                        </TextField>
-                        <div style={{
-                            outline: "1.5px solid black",
-                            display: "flex",
-                            justifyContent: "space-around",
-                            padding: "10px"
-                        }}>
-                            <ReturnFormButton style={{width: "50%"}} sx={{'&:hover': {outline: "1px solid #5BC0BE"}}}
-                                              onClick={addRoomHandler}>Add room</ReturnFormButton>
-                            <DiscardFormButton style={{width: "50%"}}
-                                               onClick={() => setIsModalVisible(false)}>Cancel</DiscardFormButton>
+            <Dialog
+                open={openCreateRoomDialog}
+                onClose={handleClose}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description">
+                <DialogTitle id="alert-dialog-title">
+                    {"Choose the language and the level of the room"}
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        <div className={"popup-content"}
+                             style={{
+                                 minWidth: "20rem",
+                                 padding: "15px",
+                                 margin: "15px",
+                                 display: "flex",
+                                 justifyContent: "space-evenly"
+                             }}
+                        >
+                            <TextField id="language-field"
+                                       value={newRoomValue.language} label="Language"
+                                       onChange={handleNewRoomChange('language')}
+                                       select
+                                       variant="outlined">
+                                {languageOptions()}
+                            </TextField>
+                            <TextField id="level-field" value={newRoomValue.proficiencyLevel}
+                                       onChange={handleNewRoomChange('proficiencyLevel')}
+                                       select
+                                       label="Current level"
+                                       variant="outlined">
+                                {levelOptions()}
+                            </TextField>
                         </div>
-                    </div>
-                </div>
-            </Popup>
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <DiscardFormButton style={{width: "50%"}} onClick={handleClose}>Cancel</DiscardFormButton>
+                    <ReturnFormButton style={{width: "50%"}} sx={{'&:hover': {outline: "1px solid #5BC0BE"}}}
+                                      onClick={addRoomHandler} autoFocus>Create room
+                    </ReturnFormButton>
+                </DialogActions>
+            </Dialog>
             <div style={{
                 backgroundColor: '#1C2541',
                 minHeight: '70vh',
@@ -370,20 +303,21 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
                      style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
                     <RoomFilter sendFilterInput={receiveFilter}/>
                     <div>
-                        <AddCircleIcon onClick={() => setIsModalVisible(oldState => !oldState)} style={{
+                        <AddCircleIcon onClick={() => setOpenCreateRoomDialog(oldState => !oldState)} style={{
                             color: "#5BC0BE",
                             marginRight: "10px",
                             borderRadius: "30px",
                             fontSize: "xxx-large",
                         }} sx={{
-                            size: "large",
                             '&:hover': {
                                 cursor: "pointer",
                             }
                         }}
                         />
                         <RefreshIcon sx={{
-                            size: "large",
+                            fontSize: "xxx-large",
+                            marginRight: "10px",
+                            color: "#FFFFFF",
                             '&:hover': {
                                 cursor: "pointer",
                             }
@@ -395,63 +329,7 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
                     maxHeight: '70vh',
                     paddingBottom: '1px',
                 }}>
-                    <List style={{
-                        display: "flex",
-                        justifyContent: "space-around",
-                        alignItems: "center",
-                        color: "#FFFFFF",
-                        marginTop: "10px",
-                        marginLeft: "2px",
-                        marginRight: "2px",
-                        padding: "5px",
-                        border: "1px solid #3A506BCC",
-                        borderRadius: "5px",
-                    }}
-                    >
-                        <ListItem sx={{
-                            textAlign: "left", width: "fit-content",
-                            // outline: "1px solid red",
-                        }} disablePadding>
-                            <ListItemText primary={"Language"}/>
-                        </ListItem>
-                        <ListItem sx={{
-                            textAlign: "center",
-                            width: "150px",
-                            // outline: "1px solid green",
-                        }} disablePadding>
-                            <ListItemText primary={"Level"}/>
-                        </ListItem>
-                        <ListItem sx={{
-                            width: "150px",
-                            textAlign: "center",
-                            // outline: "1px solid green",
-                        }} disablePadding>
-                            <ListItemText primary={"Capacity"}/>
-                        </ListItem>
-                        <ListItem sx={{
-                            width: "150px",
-                            textAlign: "left",
-                            // outline: "1px solid green",
-                        }} disablePadding>
-                            <ListItemText primary={"Created"}/>
-                        </ListItem>
-                        <ListItem sx={{
-                            textAlign: "center",
-                            width: "300px",
-                            // outline: "1px solid green",
-                        }} disablePadding>
-                            <ListItemText primary={"Room ID"}/>
-                        </ListItem>
-                    </List>
-                    <List sx={{
-                        '& .MuiList-root': {
-                            // outline: "10px solid red",
-                        },
-                        '& .MuiListItemText-root': {},
-                    }}
-                    >
-                        {renderRoomsList(rooms,filterState,handleRoomClick)}
-                    </List>
+                    {renderRoomsTable(rooms, filterState, handleRoomClick)}
                 </div>
             </div>
         </div>

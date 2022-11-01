@@ -7,7 +7,7 @@ export const FormInputMessageContainer: React.FC = () => {
             <li>Both first and last names must start with an uppercase letter</li>
             <li>Your email must be of the format : <i>email@example.com</i></li>
             <li>Your username must be unique.</li>
-            <li>Make sure the password is inputted correctly by clicking on the eye next to the field</li>
+            <li>Make sure the password is inputted correctly</li>
         </ul>
         <ul>
             Password rules

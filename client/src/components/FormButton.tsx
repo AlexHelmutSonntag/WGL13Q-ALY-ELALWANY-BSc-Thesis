@@ -42,6 +42,25 @@ export const DiscardFormButton = styled(Button)<StyledButtonProps>({
     }
 });
 
+export const DiscardFilterButton = styled(Button)<StyledButtonProps>({
+    "background-color": "rgba(28,37,65,0.5)",
+    "width": '20ch',
+    "height": '5ch',
+    "color": "#FFFFFF",
+    "fontWeight": "bold",
+    "padding": 10,
+    "marginBottom": 10,
+    "marginTop": 10,
+    "marginLeft": 5,
+    "marginRight": 5,
+    "borderRadius": 10,
+    "textTransform": "none",
+    '&:hover': {
+        "backgroundColor": "#FFFFFF",
+        "color": "#1C2541",
+    }
+});
+
 export const RedFormButton = styled(Button)<StyledButtonProps>({
     "width": '20ch',
     "height": '5ch',
@@ -94,7 +113,7 @@ export const ApplyFilterButton = styled(Button)({
     "marginTop": 10,
     "marginLeft": 5,
     "marginRight": 5,
-    "borderRadius": 15,
+    "borderRadius": 10,
     "textTransform": "none",
     '&:hover': {
         "backgroundColor": "#FFFFFF",
