@@ -1,5 +1,6 @@
-import React, {useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {MessageType, RoomState} from "../Types";
+import ReconnectingWebSocket from 'reconnecting-websocket';
 import "../style/RoomPage.scss";
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
@@ -10,9 +11,10 @@ import {useNavigate} from "react-router-dom";
 import {useAppDispatch, useAppSelector} from "../store/hooks";
 import {selectClient, setSessionId} from "../feature/client/clientSlice";
 import {
+    getLocalMediaStream,
     getMedia,
     handleAnswerMessage,
-    handleErrorMessage,
+    handleErrorMessage, handleGetUserMediaError,
     handleICECandidateEvent, handleNegotiationNeededEvent,
     handleNewICECandidateMessage, handleTrackEvent, sendToServer
 } from "../CallUtils";
@@ -36,10 +38,9 @@ const mediaConstraints = {
     audio: true,
     video: true
 };
-
 export const RoomPage: React.FC<RoomState> = (props) => {
-    let conn = new WebSocket("wss://192.168.0.218:8080/socket");
 
+    let conn = new WebSocket("wss://192.168.0.218:8080/socket");
     let myPeerConnection: any;
     let localStream: MediaStream = new MediaStream();
     const navigate = useNavigate();
@@ -52,20 +53,32 @@ export const RoomPage: React.FC<RoomState> = (props) => {
     let remoteVideoRef = useRef<HTMLVideoElement>(null);
     let localVideoRef = useRef<HTMLVideoElement>(null);
 
-    const [videoState, setVideoState] = useState<VideoState>({mic: true, video: true});
+    const [localFeed, setLocalFeed] = useState<VideoState>({mic: true, video: true});
 
     const handleVideoControllerChange = (prop: keyof VideoState) => (event: React.ChangeEvent<HTMLInputElement> | any) => {
-        setVideoState({...videoState, [prop]: !videoState[prop]});
-        if(prop ==="mic"){
-            localVideoRef.current!.muted =!localVideoRef.current!.muted;
-        }else if(prop==="video"){
-            if ("getTracks" in localVideoRef.current!.srcObject!) {
-                localVideoRef.current!.srcObject.getTracks().forEach((track) => track.stop())
+        if (prop === "mic") {
+            console.log(`[${client.sessionId}] Mic icon clicked `);
+            if(localFeed.mic){
+                // localStream.getAudioTracks().forEach((track) => track.stop());
+            }else{
+                getMedia(localStream, client, myPeerConnection, localVideoRef, mediaConstraints);
             }
-            console.log(`[${client.sessionId}]  Video icon clicked `);
-            localVideoRef.current!.pause();
-            localVideoRef.current!.srcObject= null;
+        } else if (prop === "video") {
+            console.log(`[${client.sessionId}] Video icon clicked `);
+            if (localFeed.video) {
+                console.log("stop video")
+                // localStream.getVideoTracks().forEach((track) => track.stop());
+                localVideoRef.current!.srcObject = null;
+                // localVideoRef.current!.pause();
+                // localVideoRef.current!.srcObject.getVideoTracks().forEach((track) => track.stop())
+            } else {
+                console.log("activate video")
+                getMedia(localStream, client, myPeerConnection, localVideoRef, mediaConstraints);
+                // navigator.mediaDevices.getUserMedia(mediaConstraints)
+                //     .then((mediaStream: MediaStream) => getLocalMediaStream(mediaStream, localStream, client, localVideoRef, myPeerConnection)).catch((error: any) => handleGetUserMediaError(error, client))
+            }
         }
+        setLocalFeed({...localFeed, [prop]: !localFeed[prop]});
 
     }
 
@@ -91,6 +104,15 @@ export const RoomPage: React.FC<RoomState> = (props) => {
             case MessageType.ANSWER:
                 handleAnswerMessage(message, client, myPeerConnection);
                 break;
+            case MessageType.LEAVE:
+
+                console.log(`From : ${message.from} , ${message.data} , ${message.type}`);
+                if (remoteVideoRef.current!.srcObject) {
+                    if ("getTracks" in remoteVideoRef.current!.srcObject) {
+                        remoteVideoRef.current!.srcObject.getTracks().forEach((track) => track.stop());
+                    }
+                }
+                break;
             default:
                 handleErrorMessage(`Wrong type of message received from server ${message.type}`, client);
                 break;
@@ -102,11 +124,9 @@ export const RoomPage: React.FC<RoomState> = (props) => {
     */
     conn.onopen = () => {
         console.log(`[${client.sessionId}] WebSocket connection opened to room : #${props.roomID} `);
-
         /*
         Send a message to the server to join the selected room with WebSocket
          */
-
         sendToServer(conn, {
             from: client.sessionId,
             type: MessageType.JOIN,
@@ -131,7 +151,7 @@ export const RoomPage: React.FC<RoomState> = (props) => {
     }
     window.onclose = (event) => stop;
 
-    const stop = () => {
+    const stop = async () => {
         console.log(`[${client.sessionId}] Sending 'leave' message to server`);
         sendToServer(conn, {
             from: client.sessionId,
@@ -141,7 +161,7 @@ export const RoomPage: React.FC<RoomState> = (props) => {
 
 
         if (myPeerConnection) {
-            console.log(`[${client.sessionId}] Close the RTCPeerConnection`);
+            // console.log(`[${client.sessionId}] Close the RTCPeerConnection`);
 
             //Removing all event listeners
             myPeerConnection.onicecandidate = null;
@@ -150,34 +170,30 @@ export const RoomPage: React.FC<RoomState> = (props) => {
             myPeerConnection.oniceconnectionstatechange = null;
             myPeerConnection.onsignalingstatechange = null;
             myPeerConnection.onicegatheringstatechange = null;
-
-
             // myPeerConnection.onnotificationneeded = null;
             // myPeerConnection.onremovetrack = null;
-
             //Stopping the videos
             if (localVideoRef.current!.srcObject) {
                 if ("getTracks" in localVideoRef.current!.srcObject) {
-                    localVideoRef.current!.srcObject.getTracks().forEach((track) => track.stop())
+                    await localVideoRef.current!.srcObject.getTracks().forEach((track) => track.stop());
                 }
             }
 
             if (remoteVideoRef.current!.srcObject) {
                 if ("getTracks" in remoteVideoRef.current!.srcObject) {
-                    remoteVideoRef.current!.srcObject.getTracks().forEach((track) => track.stop())
+                    await remoteVideoRef.current!.srcObject.getTracks().forEach((track) => track.stop());
                 }
             }
 
-            localVideoRef.current!.srcObject = null;
-            remoteVideoRef.current!.srcObject = null;
+            // localVideoRef.current!.srcObject = null;
+            // remoteVideoRef.current!.srcObject = null;
 
             //Closing the peer connection
-            myPeerConnection.close();
-            myPeerConnection = null;
-            console.log(`[${client.sessionId}] Close the peer connection`);
-
-            // conn.close();
-            // console.log(`[${client.sessionId}] Close the socket`);
+            // if (myPeerConnection) {
+            //     myPeerConnection.close();
+            // }
+            // myPeerConnection = null;
+            // console.log(`[${client.sessionId}] Close the peer connection`);
 
 
             // if (conn != null) {
@@ -191,6 +207,9 @@ export const RoomPage: React.FC<RoomState> = (props) => {
         // createPeerConnection(conn,client,myPeerConnection,peerConnectionConfig,remoteVideoRef);
         createPeerConnection();
         console.log(`${JSON.stringify(localStream)}, ${JSON.stringify(client)}, ${JSON.stringify(myPeerConnection)}, ${localVideoRef}, ${JSON.stringify(mediaConstraints)}`)
+        if (!localFeed.video || !localFeed.mic) {
+            return;
+        }
         getMedia(localStream, client, myPeerConnection, localVideoRef, mediaConstraints);
         // getMedia(mediaConstraints);
         if (message.data === "true") {
@@ -200,9 +219,7 @@ export const RoomPage: React.FC<RoomState> = (props) => {
                 handleNegotiationNeededEvent(event);
 
             })
-            // myPeerConnection.onnegotiationneeded = (event)=>{
-            //     handleNegotiationNeededEvent(event);
-            // };
+
         }
     }
 
@@ -219,7 +236,7 @@ export const RoomPage: React.FC<RoomState> = (props) => {
         // myPeerConnection.ontrack = handleTrackEvent;
     }
     const handleNegotiationNeededEvent = (event: Event) => {
-        console.log(`[${client.sessionId}] Negotiation needed event : ${event}`)
+        // console.log(`[${client.sessionId}] Negotiation needed event : ${event}`)
 
         myPeerConnection.createOffer().then((offer: any) => {
             return myPeerConnection.setLocalDescription(offer);
@@ -289,9 +306,13 @@ export const RoomPage: React.FC<RoomState> = (props) => {
     }
 
     const hangUp = () => {
-        console.log("hangup")
-        stop();
-        navigate("/start");
+        stop().then(()=>navigate("/start"));
+        console.log("hangup");
+    }
+    onbeforeunload = (event:BeforeUnloadEvent)=>{
+        if(myPeerConnection){
+            stop().then(r => console.log(r));
+        }
     }
 
     const tryNewConnection = () => {
@@ -309,10 +330,8 @@ export const RoomPage: React.FC<RoomState> = (props) => {
 
     }
 
-    console.log(`---------> [${client.sessionId}] : ${JSON.stringify(navigator.mediaDevices)}`)
+    // console.log(`---------> [${client.sessionId}] : ${JSON.stringify(navigator.mediaDevices)}`)
     // console.log(`---------> [${client.sessionId}] : ${JSON.stringify(navigator.mediaDevices.getUserMedia().then(value => console.log(value)))}`)
-
-
     return <div id={"room-container"}>
         <div id={"room-activity"}>
             <div id={"room-details"}>
@@ -334,20 +353,23 @@ export const RoomPage: React.FC<RoomState> = (props) => {
         <div id={"chat-container"}>
 
             <div id={"incoming-video-container"}>
-                <video ref={remoteVideoRef} autoPlay
+                <video ref={remoteVideoRef}
+                       autoPlay
                        playsInline={true}></video>
             </div>
             <div id={"local-video-container"}>
-                <video ref={localVideoRef} autoPlay
+                <video ref={localVideoRef}
+                       autoPlay
+                       muted
                        playsInline={true}></video>
             </div>
         </div>
         <div id={"video-controls"}>
             <div id={"controller-container"}>
-                {videoState.video ?
+                {localFeed.video ?
                     <VideocamIcon onClick={handleVideoControllerChange("video")}/> :
                     <VideocamOffIcon onClick={handleVideoControllerChange("video")}/>}
-                {videoState.mic ? <MicIcon onClick={handleVideoControllerChange("mic")}/> :
+                {localFeed.mic ? <MicIcon onClick={handleVideoControllerChange("mic")}/> :
                     <MicOffIcon onClick={handleVideoControllerChange("mic")}/>}
                 <CallEndIcon onClick={() => hangUp()} style={{backgroundColor: "red", borderRadius: "50%"}}/>
             </div>

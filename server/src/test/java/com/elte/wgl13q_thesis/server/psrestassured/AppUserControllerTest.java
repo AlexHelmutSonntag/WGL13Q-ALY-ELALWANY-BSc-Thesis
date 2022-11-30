@@ -35,7 +35,8 @@ public class AppUserControllerTest {
 
 
     public static String BASE_URL = "";
-    //    = "http://localhost:8080/"
+    //    ="http://localhost:8080/"
+    //    ="http://192.168.0.218:8080/"
     public static String AUTH_USER_USERNAME = "";
     public static String AUTH_USER_SECRET = "";
     public static String AUTH_ADMIN_USERNAME = "";
@@ -508,7 +509,7 @@ public class AppUserControllerTest {
                         .then()
                         .extract().response();
         log.info(String.valueOf(response.getStatusCode()));
-        Assertions.assertEquals(HTTP_BAD_METHOD, response.getStatusCode());
+        Assertions.assertEquals(HTTP_FORBIDDEN, response.getStatusCode());
 
         //Clean up
         authSetupWithCredentials(AUTH_ADMIN_USERNAME, AUTH_ADMIN_SECRET);

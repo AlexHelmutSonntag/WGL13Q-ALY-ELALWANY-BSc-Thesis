@@ -42,10 +42,14 @@ public class ServerApplication {
                     "annasmith", "password", "Anna", "Smith", ADMIN,
                     LocalDate.of(1999, SEPTEMBER, 3),
                     "annasmith@gmail.com", Gender.FEMALE);
+            AppUser testUser = new AppUser(
+                    "testuser", "password", "Test", "User", ADMIN,
+                    LocalDate.of(1998, SEPTEMBER, 8),
+                    "testuser@gmail.com", Gender.FEMALE);
             userService.addNewUser(mariam);
             userService.addNewUser(ali);
             userService.addNewUser(anna);
+            userService.addNewUser(testUser);
         };
     }
-
 }

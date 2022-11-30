@@ -14,7 +14,18 @@ export enum Language {
     ENGLISH = "ENGLISH",
     HUNGARIAN = "HUNGARIAN",
     SPANISH = "SPANISH",
-    FRENCH = "FRENCH"
+    FRENCH = "FRENCH",
+    ARABIC ="ARABIC",
+    BELGIAN = "BELGIAN",
+    DUTCH= "DUTCH",
+    TURKISH ="TURKISH",
+    SWEDISH ="SWEDISH",
+    NORWEGIAN ="NORWEGIAN",
+    ICELANDIC="ICELANDIC",
+    DANISH ="DANISH",
+    FINNISH ="FINNISH",
+    CHINESE ="CHINESE",
+
 }
 
 export enum ProficiencyLevel {

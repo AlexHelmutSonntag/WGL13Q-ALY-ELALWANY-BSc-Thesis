@@ -17,7 +17,7 @@ import {
     selectUser
 } from "./feature/user/userSlice";
 import {selectToken} from "./feature/token/tokenSlice";
-import {Tester} from "./components/Tester";
+// import {Tester} from "./components/Tester";
 import {IndexPage} from "./components/IndexPage";
 import {RoomPage} from "./components/RoomPage";
 
@@ -84,6 +84,7 @@ const App: React.FC = () => {
 
     const userFromStore = useAppSelector(selectUser);
     const roomNumber = 1;
+    console.log(selectedRoom.roomID)
     return (
         <Router>
             <div className="App">
@@ -111,7 +112,6 @@ const App: React.FC = () => {
                                                          gender={userFromStore.gender}
                            />}/>
                     <Route path={"/start"} element={<StartPage passValuesToParent={receiveRoomFromStartPage}/>}/>
-                    <Route path={"/docs"} element={<Tester/>}/>
                     <Route path={"/"} element={<IndexPage/>}/>
                     <Route path={`/room/${selectedRoom.roomID}`}
                            element={<RoomPage

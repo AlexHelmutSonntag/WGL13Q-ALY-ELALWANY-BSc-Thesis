@@ -28,9 +28,9 @@ const mapAPIKey= "AIzaSyDfsM7jIiuj92Sy_CNLfY-QSiTPHkpZxRI"
 export const IndexPage: React.FC = () => {
 
     const user = useAppSelector(selectUser);
-    if (user.isAuthenticated) {
-        return <Navigate to={"/home"}/>
-    }
+    // if (user.isAuthenticated) {
+    //     return <Navigate to={"/"}/>
+    // }
 
     return <div id={"index-container"}>
         <div id={"index-header"}>

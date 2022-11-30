@@ -1,0 +1,406 @@
+{
+	"info": {
+		"_postman_id": "c261a0d0-4aac-4299-bead-7fed2d15289e",
+		"name": "LanX API testing",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18544652"
+	},
+	"item": [
+		{
+			"name": "get user with username",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{backend_base_url}}/api/v1/user/mariam21",
+					"host": [
+						"{{backend_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"user",
+						"mariam21"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create user",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"firstName\" : \"Schotte\",\n    \"lastName\" : \"Heiko\",\n    \"password\" : \"password\",\n    \"email\" : \"reinsiger@tatort.com\",\n    \"dob\" : \"1987-01-08\",\n    \"gender\": \"MALE\",\n    \"username\": \"schottsy21\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_base_url}}/api/v1/user/new",
+					"host": [
+						"{{backend_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"user",
+						"new"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ADMIN login & get JWT",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let response = JSON.parse(responseBody);",
+							"pm.environment.set(\"access_token_admin\",response.access_token);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "{{auth_client_id_ADMIN}}",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "{{auth_client_secret_ADMIN}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{backend_base_url}}/login",
+					"host": [
+						"{{backend_base_url}}"
+					],
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "update user",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"firstName\": \"lili\",\n    \"lastName\": \"schneider\",\n    \"password\": \"password\",\n    \"role\": \"ADMIN\",\n    \"dob\": \"1999-11-14\",\n    \"gender\": \"FEMALE\",\n    \"email\": \"lili@sch99.com\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_base_url}}/api/v1/user/updateUser/schottsy21",
+					"host": [
+						"{{backend_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"user",
+						"updateUser",
+						"schottsy21"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "delete user",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{backend_base_url}}/api/v1/user/test_user",
+					"host": [
+						"{{backend_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"user",
+						"test_user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get all users",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{backend_base_url}}/api/v1/user/all",
+					"host": [
+						"{{backend_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"user",
+						"all"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get all rooms",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{backend_base_url}}/api/v1/room/all",
+					"host": [
+						"{{backend_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"room",
+						"all"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create new room",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\" : \"10\",\n    \"uuid\" : \"ac309a95-2ae5-450d-bfbd-24f1be34531y\",\n    \"proficiencyLevel\" : \"FLUENT\",\n    \"language\" : \"ENGLISH\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_base_url}}/api/v1/room/new",
+					"host": [
+						"{{backend_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"room",
+						"new"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "USER login & get JWT Token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let response = JSON.parse(responseBody);",
+							"pm.environment.set(\"access_token_user\",response.access_token);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "{{auth_client_id_USER}}",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "{{auth_client_secret_USER}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{backend_base_url}}/login",
+					"host": [
+						"{{backend_base_url}}"
+					],
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create new user",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.environment.set(\"new_username\",\"test_user\");",
+							"pm.environment.set(\"new_password\",\"password\");",
+							"console.log(pm.environment.get(\"new_username\"));",
+							"console.log(pm.environment.get(\"new_password\"))"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"firstName\" : \"Test\",\n    \"lastName\" : \"User\",\n    \"password\" : \"password\",\n    \"email\" : \"test_user@email.com\",\n    \"dob\" : \"1987-01-08\",\n    \"gender\": \"MALE\",\n    \"username\": \"test_user\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_base_url}}/api/v1/user/new",
+					"host": [
+						"{{backend_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"user",
+						"new"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login with new user",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let response = JSON.parse(responseBody);",
+							"pm.environment.set(\"new_access_token\",response.access_token);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "{{new_username}}",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "{{new_password}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{backend_base_url}}/login",
+					"host": [
+						"{{backend_base_url}}"
+					],
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -54,13 +54,14 @@ public class AuthUtils {
         }
     }
 
-    public static String getUsernameFromDecodedJWT(DecodedJWT decodedJWT){
+    public static String getUsernameFromDecodedJWT(DecodedJWT decodedJWT) {
         return decodedJWT.getSubject();
     }
 
-    public static String[] getRolesFromDecodedJWT(DecodedJWT decodedJWT){
-        return  decodedJWT.getClaim("roles").asArray(String.class);
+    public static String[] getRolesFromDecodedJWT(DecodedJWT decodedJWT) {
+        return decodedJWT.getClaim("roles").asArray(String.class);
     }
+
     public static void setAccessAndRefreshTokensInHeader(HttpServletResponse response, String accessToken, String refreshToken) {
         response.setHeader("access_token", accessToken);
         response.setHeader("refresh_token", refreshToken);

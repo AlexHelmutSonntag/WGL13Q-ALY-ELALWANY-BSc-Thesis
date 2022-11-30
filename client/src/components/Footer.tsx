@@ -11,7 +11,7 @@ const contactList = [
 
 const listItems: ReactNode = contactList.map((item) => {
     return <div>
-        <li style={{paddingLeft: '12px', 'paddingTop':'2px'}}>
+        <li key={`${item.name}`} style={{paddingLeft: '12px', 'paddingTop':'2px'}}>
             <a className={"footer-list-item"} href={item.link}>{item.icon}</a>
         </li>
     </div>

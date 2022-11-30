@@ -37,6 +37,9 @@
   width: 70rem;
   height: 42rem;
 }
+#room-container #chat-container video::-webkit-media-controls {
+  display: none;
+}
 #room-container #chat-container video {
   border: 1px solid #FFFFFF;
   border-radius: 15px;

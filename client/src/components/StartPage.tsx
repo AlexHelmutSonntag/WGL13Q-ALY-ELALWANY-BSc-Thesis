@@ -19,7 +19,6 @@ import axios from "axios";
 import {selectClient} from "../feature/client/clientSlice";
 import {selectToken} from "../feature/token/tokenSlice";
 import {languageOptions, levelOptions} from "../Utils";
-import {styled} from "@mui/material/styles";
 
 
 const renderRoomsList = (list: Array<RoomState>, filterState: FilterState, clickHandler: (item: RoomState) => any) => {
@@ -71,7 +70,7 @@ const renderRoomsTable = (list: Array<RoomState>, filterState: FilterState, clic
                 >
                     <TableCell align="center">Language</TableCell>
                     <TableCell align="center">Level</TableCell>
-                    <TableCell align="center">Capacity</TableCell>
+                    <TableCell align="center">Users inside</TableCell>
                     <TableCell align="center">Created</TableCell>
                     <TableCell align="center">Room ID</TableCell>
                 </TableRow>
@@ -159,7 +158,7 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
         setOpenCreateRoomDialog(false);
         console.log(newRoomValue)
         let payload = {
-            id: 10, // dummy id
+            id: 10, // dummy id -> in server the ids are fetched based on the current count of rooms.
             uuid: client.sessionId,
             language: newRoomValue.language,
             proficiencyLevel: newRoomValue.proficiencyLevel,

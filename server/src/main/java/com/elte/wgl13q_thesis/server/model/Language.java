@@ -5,8 +5,17 @@ public enum Language {
     ENGLISH("English"),
     HUNGARIAN("Hungarian"),
     SPANISH("Spanish"),
-    FRENCH("French");
-
+    FRENCH("French"),
+    ARABIC("Arabic"),
+    BELGIAN("Belgian"),
+    DUTCH("Dutch"),
+    NORWEGIAN("Norwegian"),
+    SWEDISH("Swedish"),
+    ICELANDIC("Icelandic"),
+    DANISH("Danish"),
+    FINNISH("Finnish"),
+    CHINESE("Chinese"),
+    TURKISH("Turkish");
     private final String type;
 
     private Language(String type) {

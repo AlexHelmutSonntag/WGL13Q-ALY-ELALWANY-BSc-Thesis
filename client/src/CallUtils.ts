@@ -1,5 +1,6 @@
 import React from "react";
 import {ClientSession, MessageType, UserMediaError} from "./Types";
+import ReconnectingWebSocket from "reconnecting-websocket";
 
 
 export const muteMic = (videoRef: React.RefObject<HTMLVideoElement>, client: ClientSession, value: boolean) => {
@@ -33,20 +34,19 @@ export const handleAnswerMessage = (message: any, client: ClientSession, peerCon
     peerConnection.setRemoteDescription(message.sdp).catch(error => handleErrorMessage(error, client));
 }
 
-export const handleICECandidateEvent = (event: any, client: ClientSession, websocketConnection: WebSocket) => {
-    console.log(`[${client.sessionId}] ICE Candidate Event ? ${event.candidate}`);
+export const handleICECandidateEvent = (event: any, client: ClientSession, websocketConnection: WebSocket|ReconnectingWebSocket) => {
+    // console.log(`[${client.sessionId}] ICE Candidate Event ? ${event.candidate}`);
     if (event.candidate) {
         sendToServer(websocketConnection, {
             from: client.sessionId,
             type: MessageType.ICE,
             candidate: event.candidate
         }, client);
-
-        console.log(`[${client.sessionId}] ICE Candidate Event : ICE Candidate sent ${event.candidate}`);
+        // console.log(`[${client.sessionId}] ICE Candidate Event : ICE Candidate sent ${event.candidate}`);
     }
 }
 
-export const handleNegotiationNeededEvent = (event:Event,peerConnection:RTCPeerConnection,client:ClientSession,websocketConnection:WebSocket) => {
+export const handleNegotiationNeededEvent = (event:Event,peerConnection:RTCPeerConnection,client:ClientSession,websocketConnection:WebSocket|ReconnectingWebSocket) => {
     console.log(`[${client.sessionId}] Negotiation needed event : ${event}`)
 
     peerConnection.createOffer().then((offer: any) => {
@@ -68,41 +68,43 @@ export const handleNegotiationNeededEvent = (event:Event,peerConnection:RTCPeerC
 export const handleTrackEvent = (event: any, client: ClientSession, remoteVideoRef: React.RefObject<HTMLVideoElement>) => {
     console.log(`[${client.sessionId}] Setting stream to remote video element`);
     remoteVideoRef.current!.srcObject = event.streams[0];
+    remoteVideoRef.current!.play().then(() => console.log(`[${client.sessionId}] Remote video displayed`)).catch((err) => console.log(`Error playing remote video ${err}`))
+
 }
 
-
-export const createPeerConnection = (websocketConnection: WebSocket, client: ClientSession, peerConnection: RTCPeerConnection, peerConnectionConfig: any, remoteVideoRef: React.RefObject<HTMLVideoElement>) => {
-    peerConnection = new RTCPeerConnection(peerConnectionConfig);
-    peerConnection.addEventListener("icecandidate", (event: any) => {
-        handleICECandidateEvent(event, client, websocketConnection)
-    })
-    console.log(`[${client.sessionId}] creating peer connection`);
-    peerConnection.addEventListener("track", (event: any) => {
-        handleTrackEvent(event, client, remoteVideoRef);
-    })
-}
+//
+// export const createPeerConnection = (websocketConnection: WebSocket, client: ClientSession, peerConnection: RTCPeerConnection, peerConnectionConfig: any, remoteVideoRef: React.RefObject<HTMLVideoElement>) => {
+//     peerConnection = new RTCPeerConnection(peerConnectionConfig);
+//     peerConnection.addEventListener("icecandidate", (event: any) => {
+//         handleICECandidateEvent(event, client, websocketConnection)
+//     })
+//     console.log(`[${client.sessionId}] creating peer connection`);
+//     peerConnection.addEventListener("track", (event: any) => {
+//         handleTrackEvent(event, client, remoteVideoRef);
+//     })
+// }
 
 export const getMedia = (localStream: MediaStream, client: ClientSession, peerConnection: RTCPeerConnection, localVideoRef: React.RefObject<HTMLVideoElement>, constrains: any) => {
     if (localStream) {
         localStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
     }
     navigator.mediaDevices.getUserMedia(constrains)
-        // .then(getLocalMediaStream).catch(handleGetUserMediaError);
         .then((mediaStream: MediaStream) => getLocalMediaStream(mediaStream, localStream, client, localVideoRef, peerConnection)).catch((error: any) => handleGetUserMediaError(error, client))
 }
 
 export const getLocalMediaStream = (mediaStream: MediaStream, localStream: MediaStream, client: ClientSession, localVideoRef: React.RefObject<HTMLVideoElement>, peerConnection: RTCPeerConnection) => {
     localStream = mediaStream;
-    console.log(`[${client.sessionId}] Getting local media stream`);
+    // console.log(`[${client.sessionId}] Getting local media stream`);
     localVideoRef.current!.srcObject = localStream;
     localVideoRef.current!.onloadedmetadata = ((ev: any) => {
-        localVideoRef.current!.play().then(() => console.log(`[${client.sessionId}] Local video displayed`)).catch((err) => console.log(`Error when playing ${err}`))
+        // if(localVideoRef.current!.paused)
+            localVideoRef.current!.play().then(() => console.log(`[${client.sessionId}] Local video displayed`)).catch((err) => console.log(`Error when playing local video${err}`))
     })
     // console.log(localStream)
     localStream.getTracks().forEach((track: MediaStreamTrack) => peerConnection.addTrack(track, localStream));
 }
 
-const handleGetUserMediaError = (error: any, client: ClientSession) => {
+export const handleGetUserMediaError = (error: any, client: ClientSession) => {
     console.log(`[${client.sessionId}] Error getting user media : ${error.message}`);
     switch (error.name) {
         case UserMediaError.NOT_FOUND_ERROR:
@@ -121,16 +123,17 @@ const handleGetUserMediaError = (error: any, client: ClientSession) => {
 
 
 //messaging
-export const sendToServer = (conn: WebSocket, message: any, client: ClientSession) => {
+export const sendToServer = (conn: WebSocket|ReconnectingWebSocket, message: any, client: ClientSession) => {
     if (!isOpen(conn)) {
         console.log(conn)
         console.log("socket not open!");
+        // conn = new WebSocket("wss://192.168.0.218:8080/socket");
     }
     conn.send(JSON.stringify(message));
     console.log(`[${client.sessionId}] Message sent : ${message.type} ${message.data} `)
 }
 
-const isOpen = (connection: WebSocket) => {
+const isOpen = (connection: WebSocket|ReconnectingWebSocket) => {
     return connection.readyState === connection.OPEN;
 }
 
