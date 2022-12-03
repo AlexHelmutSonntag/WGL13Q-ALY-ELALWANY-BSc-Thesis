@@ -2,14 +2,18 @@ package com.elte.wgl13q_thesis.server.controller;
 
 import com.elte.wgl13q_thesis.server.model.Room;
 import com.elte.wgl13q_thesis.server.model.RoomRequestBody;
+import com.elte.wgl13q_thesis.server.service.RoomService;
 import com.elte.wgl13q_thesis.server.service.RoomServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.expression.spel.ast.NullLiteral;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 
 
@@ -17,7 +21,6 @@ import java.util.*;
 @RequestMapping(path = "api/v1/room")
 //@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000","http://192.168.0.218:3000","*"})
 @Slf4j
-
 public class RoomController {
 
 
@@ -28,30 +31,44 @@ public class RoomController {
         this.roomService = roomService;
     }
 
-    @GetMapping(path = "{roomId}")
+    @GetMapping(path = "/{roomId}")
     public ResponseEntity<?> getRoom(@PathVariable("roomId") String roomId) {
-        return new ResponseEntity<String>(roomId, HttpStatus.OK);
-    }
-
-    @GetMapping(path = "/new/{roomId}")
-    public ResponseEntity<?> getNewRoom(@PathVariable("roomId") String roomId) {
-        return new ResponseEntity<String>(roomId, HttpStatus.OK);
+        try {
+            Optional<Room> roomOptional = this.roomService.findRoomByStringId(roomId);
+            if (roomOptional.isPresent()) {
+                Room room = roomOptional.get();
+                Map<String, Object> response = new HashMap<>();
+                response.put("roomNumber", room.getId());
+                response.put("language", room.getLanguage());
+                response.put("proficiencyLevel", room.getProficiencyLevel());
+                response.put("createdAt", room.getCreatedAt());
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<String>("No room with id : " + roomId, HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            String message = e.getMessage();
+            return new ResponseEntity<String>(message, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping(value = "/new")
     public ResponseEntity<?> processRoomSelection(@RequestBody RoomRequestBody requestBody, final BindingResult binding) {
-        log.info(requestBody.toString());
 
+        log.info(requestBody.toString());
+        if (requestBody.getId() == null || requestBody.getUuid() == null || requestBody.getProficiencyLevel() == null || requestBody.getLanguage() == null) {
+            return new ResponseEntity<>("Body missing attributes", HttpStatus.BAD_REQUEST);
+        }
         RoomRequestBody roomRequestBody = this.roomService.processRoomSelection(requestBody, binding);
         if (roomRequestBody == null) {
             return new ResponseEntity<>("Room already exists", HttpStatus.CONFLICT);
         }
 
-        Map<String,Object> response = new HashMap<>();
-        response.put("roomNumber" , roomRequestBody.getId());
-        response.put("language" , roomRequestBody.getLanguage());
-        response.put("proficiencyLevel" , roomRequestBody.getProficiencyLevel());
-        response.put("createdAt" , roomRequestBody.getCreatedAt());
+        Map<String, Object> response = new HashMap<>();
+        response.put("roomNumber", roomRequestBody.getId());
+        response.put("language", roomRequestBody.getLanguage());
+        response.put("proficiencyLevel", roomRequestBody.getProficiencyLevel());
+        response.put("createdAt", roomRequestBody.getCreatedAt());
 
         return new ResponseEntity<>(
                 response, HttpStatus.CREATED);
@@ -62,26 +79,46 @@ public class RoomController {
         return new ResponseEntity<RoomRequestBody>(this.roomService.displaySelectedRoom(sid, uuid), HttpStatus.OK);
     }
 
+    @DeleteMapping(path = "/{roomId}")
+    public ResponseEntity<?> deleteRoom(@PathVariable("roomId") Integer roomId) {
+        Room removedRoom = roomService.removeRoom(roomId);
+        for (Room room : roomService.getRooms()) {
+            log.info(room.toString());
+        }
+        if (removedRoom != null) {
+            return new ResponseEntity<>(removedRoom, HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Room not found", HttpStatus.BAD_REQUEST);
+    }
+
+    @DeleteMapping(path = "/all")
+    public ResponseEntity<?> deleteAllRooms() {
+        Set<Room> removedRooms = roomService.deleteAllRooms();
+        return new ResponseEntity<>(removedRooms, HttpStatus.OK);
+    }
+
     @GetMapping(path = "/all")
     public ResponseEntity<?> getAllRooms() {
-        Set<Room> rooms = roomService.getRooms();
-        List<RoomResponse> response = new ArrayList<>();
-        rooms.forEach(room -> {
-            log.info(room.toString());
-        });
-
-        rooms.forEach(room -> {
-            log.info(String.valueOf(room.getClients().keySet()));
-            RoomResponse responseEntry = new RoomResponse();
-            responseEntry.entry.put("roomNumber", room.getId());
-            responseEntry.entry.put("language", room.getLanguage());
-            responseEntry.entry.put("proficiencyLevel", room.getProficiencyLevel());
-            responseEntry.entry.put("clients", room.getClients().keySet());
-            responseEntry.entry.put("createdAt", room.getCreatedAt());
-            response.add(responseEntry);
-        });
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        try {
+            Set<Room> rooms = roomService.getRooms();
+            List<RoomResponse> response = new ArrayList<>();
+            rooms.forEach(room -> {
+                log.info(room.toString());
+            });
+            rooms.forEach(room -> {
+                log.info(String.valueOf(room.getClients().keySet()));
+                RoomResponse responseEntry = new RoomResponse();
+                responseEntry.entry.put("roomNumber", room.getId());
+                responseEntry.entry.put("language", room.getLanguage());
+                responseEntry.entry.put("proficiencyLevel", room.getProficiencyLevel());
+                responseEntry.entry.put("clients", room.getClients().keySet());
+                responseEntry.entry.put("createdAt", room.getCreatedAt());
+                response.add(responseEntry);
+            });
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Server issue encountered " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping(path = "/random")

@@ -46,7 +46,9 @@
         height: 42rem;
       }
     }
-
+    video::-webkit-media-controls {
+      display: none;
+    }
     video {
       //background-color: #0B132B;
       border: 1px solid #FFFFFF;

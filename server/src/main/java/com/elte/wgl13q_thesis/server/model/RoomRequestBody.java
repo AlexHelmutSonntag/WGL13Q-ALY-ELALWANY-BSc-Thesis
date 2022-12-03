@@ -7,7 +7,6 @@ public class RoomRequestBody {
     private  String uuid;
     private ProficiencyLevel proficiencyLevel;
     private Language language;
-
     private LocalDate createdAt;
     public ProficiencyLevel getProficiencyLevel() {
         return proficiencyLevel;

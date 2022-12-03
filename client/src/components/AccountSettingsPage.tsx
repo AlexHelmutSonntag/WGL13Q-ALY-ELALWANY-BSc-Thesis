@@ -110,9 +110,16 @@ export const AccountSettingsPage: React.FC<AuthenticatedUser> = (props: Authenti
                     msgDisplayRef.current!.classList.remove("fail")
                     msgDisplayRef.current!.classList.add("success")
                     setUpdateUserMessage("User Updated!")
+                }else{
+
                 }
             }
-        ).catch((error) => console.log(error));
+        ).catch((error) => {
+            console.log(error)
+            setUpdateUserMessage(error.response.data.error_message);
+            msgDisplayRef.current!.classList.add("fail");
+            msgDisplayRef.current!.classList.remove("success")
+        });
     }
 
     const deleteUser = (body: any) => {

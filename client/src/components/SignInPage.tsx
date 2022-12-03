@@ -50,7 +50,7 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
     });
 
     if (user.isAuthenticated) {
-        return <Navigate to={"/home"}/>
+        return <Navigate to={"/start"}/>
     }
 
     const validateEmail = (email: string) => {
@@ -88,11 +88,12 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
                 headers: {'content-type': 'application/x-www-form-urlencoded',},
                 data: qs.stringify(params),
             }).then(response => {
-                console.log(`Login response:\n ${response.data}`);
-                if (response.data.access_token && response.data.refresh_token) {
+
+                console.log(`Login response:\n ${JSON.stringify(response.data)}`);
+                if (response.data.access_token && response.data.refresh_token&&response.status===200) {
                     dispatch(setToken(response.data.access_token));
                     dispatch(setAuthenticated(true));
-                    console.log(`From store : \n${user.username}`);
+                    console.log(`From store :${user.username} \n`);
                     let config = {
                         headers: {
                             'Content-Type': 'application/json',
@@ -100,17 +101,18 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
                         }
                     }
                     fetchUserDetails(params.username, config);
-                    navigate("/home");
+                    console.log("hi")
+                    navigate("/account");
                 }
             }).catch(err => {
                 console.log(err)
                 let statusCode = err.response.status
-                console.log(statusCode)
+                displayMsgRef.current!.style.display="block";
+                displayMsgRef.current!.style.borderColor="red";
                 if (statusCode === 403) {
-                    displayMsgRef.current!.style.display="block";
-                    displayMsgRef.current!.style.borderColor="red";
-
                     setDisplayMsg("Wrong username or password!")
+                }else{
+                    setDisplayMsg(err.message)
                 }
             });
         }

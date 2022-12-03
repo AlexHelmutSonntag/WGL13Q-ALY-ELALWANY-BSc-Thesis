@@ -22,7 +22,6 @@ public class AppUser {
     private String password;
     private String firstName;
     private String lastName;
-    //    private final Set<AppUserRole> roles = new HashSet<>();
     private AppUserRole role;
     private LocalDate dob;
 

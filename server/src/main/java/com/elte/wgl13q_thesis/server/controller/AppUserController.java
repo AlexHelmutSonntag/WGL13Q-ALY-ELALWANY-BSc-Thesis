@@ -3,6 +3,8 @@ package com.elte.wgl13q_thesis.server.controller;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.elte.wgl13q_thesis.server.model.AppUser;
 import com.elte.wgl13q_thesis.server.model.AppUserRole;
@@ -30,7 +32,6 @@ import static org.springframework.http.HttpStatus.*;
 @RestController
 @RequestMapping(path = "api/v1/user")
 //@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000","http://192.168.0.218:3000","*"})
-
 @Slf4j
 public class AppUserController {
 
@@ -41,21 +42,14 @@ public class AppUserController {
         this.appUserService = appUserService;
     }
 
-//    @GetMapping(path = "{userId}")
-//    public ResponseEntity<?> getUser(@PathVariable("userId") Long userId) throws IllegalStateException {
-//        try {
-//            return new ResponseEntity<AppUser>(appUserService.fetchUserFromDB(userId), HttpStatus.OK);
-//        } catch (Exception e) {
-//            return new ResponseEntity<String>("error : User with id `" + userId + "` does not exist.", HttpStatus.NOT_FOUND);
-//        }
-//    }
-
     @GetMapping(path = "{username}")
     public ResponseEntity<?> getUser(@PathVariable("username") String username) throws IllegalStateException {
         try {
             return new ResponseEntity<AppUser>(appUserService.fetchUserFromDB(username), HttpStatus.OK);
-        } catch (Exception e) {
+        } catch (UsernameNotFoundException e) {
             return new ResponseEntity<String>("error : User with username `" + username + "` does not exist.", HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<String>("Server error when fetching user: `" + username, INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -81,7 +75,6 @@ public class AppUserController {
             log.info(message);
             return new ResponseEntity<String>(message, HttpStatus.CONFLICT);
         }
-
         if (appUserService.isEmailTaken(user.getEmail())) {
             message = String.format("Email %s already taken !", user.getEmail());
             log.info(message);
@@ -107,7 +100,7 @@ public class AppUserController {
                 appUserService.deleteUser(username);
                 return new ResponseEntity<String>("User " + username + " deleted", HttpStatus.OK);
             }
-            return new ResponseEntity<String>("Not authorized to delete user : " + username, METHOD_NOT_ALLOWED);
+            return new ResponseEntity<String>("Not authorized to delete user : " + username, FORBIDDEN);
         } catch (UsernameNotFoundException exception) {
             AuthUtils.authErrorLogger(response, NOT_FOUND, exception);
             return new ResponseEntity<String>("User " + username + " not found", NOT_FOUND);
@@ -182,33 +175,32 @@ public class AppUserController {
             try {
                 String refreshToken = authorizationHeader.substring("Bearer ".length());
                 Algorithm algorithm = Algorithm.HMAC256("secret".getBytes());
-                JWTVerifier verifier = JWT.require(algorithm).build();
-                DecodedJWT decodedJWT = verifier.verify(refreshToken);
-                log.info(decodedJWT.getToken());
+                DecodedJWT decodedJWT = JWT.decode(refreshToken);
+                log.info(decodedJWT.getSubject());
                 String username = decodedJWT.getSubject();
                 AppUser user = appUserService.fetchUserFromDB(username);
-                log.info(user.getUsername() + " 's role :  " + user.getRole().toString());
                 String accessToken = JWT.create()
                         .withSubject(user.getUsername())
                         .withExpiresAt(new Date(System.currentTimeMillis() + 10 * 60 * 1000))
                         .withIssuer(request.getRequestURL().toString())
                         .withClaim("roles", new ArrayList<>(Arrays.asList(user.getRole().toString())))
                         .sign(algorithm);
-
                 log.info("refresh_token : " + refreshToken);
                 log.info("access_token : " + accessToken);
                 AuthUtils.putAccessAndRefreshTokensInBody(response, accessToken, refreshToken);
                 AuthUtils.setAccessAndRefreshTokensInHeader(response, accessToken, refreshToken);
-            } catch (Exception exception) {
+
+            } catch (UsernameNotFoundException | NullPointerException exception) {
+                AuthUtils.authErrorLogger(response, NOT_FOUND, exception);
+            }catch(JWTDecodeException exception){
                 AuthUtils.authErrorLogger(response, FORBIDDEN, exception);
             }
         } else {
             response.setHeader("error", "Refresh token is missing");
-            response.setStatus(UNAUTHORIZED.value());
+            response.setStatus(BAD_REQUEST.value());
             Map<String, String> errors = new HashMap<>();
             errors.put("error:", "Refresh token is missing");
             new ObjectMapper().writeValue(response.getOutputStream(), errors);
-//            throw new RuntimeException("Refresh token is missing.");
         }
     }
 

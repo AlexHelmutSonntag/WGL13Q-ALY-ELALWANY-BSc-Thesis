@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import javax.servlet.ServletException;
 import java.time.LocalDate;
@@ -24,9 +25,6 @@ import java.util.*;
 public class AppUserService implements UserDetailsService {
 
     private final AppUserRepository appUserRepository;
-
-//    @Autowired
-//    private PasswordEncoder passwordEncoder;
 
     @Bean
     private PasswordEncoder passwordEncoder() {
@@ -72,7 +70,7 @@ public class AppUserService implements UserDetailsService {
         } catch (IllegalStateException e) {
             throw new UsernameNotFoundException("User with username " + username + " does not exist");
         }
-        return null;
+        throw new UsernameNotFoundException("User with username " + username + " does not exist");
     }
 
     public boolean addNewUser(AppUser appUser) {
@@ -83,6 +81,10 @@ public class AppUserService implements UserDetailsService {
         appUser.setPassword(passwordEncoder().encode(appUser.getPassword()));
         appUserRepository.save(appUser);
         return true;
+    }
+    public Long getUserId(String username){
+        Optional<AppUser> appUser= appUserRepository.findUserByUsername(username);
+        return appUser.map(AppUser::getId).orElse(null);
     }
 
     public void deleteUser(String username) {
@@ -119,12 +121,8 @@ public class AppUserService implements UserDetailsService {
     }
 
     public void updateUser(String username, AppUser givenAppUser) {
-
         try {
             AppUser appUser = fetchUserFromDB(username);
-            if (!username.equals(appUser.getUsername())) {
-                throw new IllegalStateException("You do not have permission to update this user!");
-            }
             log.info("User fetched : {}", appUser.getUsername());
             if (givenAppUser.getFirstName() != null && givenAppUser.getFirstName().length() > 0 && !Objects.equals(appUser.getFirstName(), givenAppUser.getFirstName())) {
                 log.info("{} is getting a new first name : {}", appUser.getUsername(), givenAppUser.getFirstName());
@@ -161,23 +159,6 @@ public class AppUserService implements UserDetailsService {
         }
     }
 
-    public void updateUserFirstName(Long userId, String firstName, String email) {
-        AppUser appUser = fetchUserFromDB(userId);
-        log.info("User fetched : {}", appUser.getUsername());
-        if (firstName != null && firstName.length() > 0 && !Objects.equals(appUser.getFirstName(), firstName)) {
-            log.info("{} is getting a new first name : {}", appUser.getUsername(), firstName);
-            appUser.setFirstName(firstName);
-        }
-        if (email != null && email.length() > 0 && !Objects.equals(appUser.getEmail(), email)) {
-            if (isEmailTaken(email)) {
-                throw new IllegalStateException("Email taken!");
-            }
-            log.info("{} is getting a new email : {}", appUser.getUsername(), email);
-            appUser.setEmail(email);
-        }
-        appUserRepository.save(appUser);
-    }
-
     public void updateUserRole(Long userId, AppUserRole role) {
         AppUser appUser = fetchUserFromDB(userId);
         log.info("User fetched : {}", appUser.getUsername());
@@ -207,4 +188,7 @@ public class AppUserService implements UserDetailsService {
         return userOptional.isPresent();
     }
 
+    public String encodePassword(String password){
+        return passwordEncoder().encode(password);
+    }
 }

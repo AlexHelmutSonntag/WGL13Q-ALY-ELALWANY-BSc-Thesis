@@ -61,17 +61,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable();
-        http.authorizeRequests().antMatchers("/login", "/api/v1/user/new", "/api/v1/user/token/refresh/**", "/api/v1/user/test_token","/api/v1/room/**","/socket").permitAll();
-//        http.authorizeRequests().antMatchers("/api/v1/user/all").authenticated();
-
-//               .and().authorizeRequests().antMatchers("*/login").authenticated()
-//        http.formLogin()
-//                .loginPage("http://localhost:3000/login")
-//                .defaultSuccessUrl("http://localhost:3000/docs", true);
-
+        http.authorizeRequests().antMatchers("/login", "/api/v1/user/new", "/api/v1/user/token/refresh/**", "/api/v1/user/test_token","/socket").permitAll();
         http.authorizeRequests().anyRequest().authenticated();
-//                .and().httpBasic()
-
         http.addFilter(new CustomAuthenticationFilter(authenticationManagerBean()));
         http.addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
     }
@@ -90,7 +81,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         config.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "DELETE", "PUT", "PATCH"));
         config.setAllowCredentials(true);
         config.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "Access-Control-Allow-Origin"));
-
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 

@@ -52,6 +52,12 @@ public class WebSocketMessage {
         this.type = type;
     }
 
+    public WebSocketMessage(final String from, final MessageType type, final String data) {
+        this.from = from;
+        this.data = data;
+        this.type = type;
+    }
+
     public WebSocketMessage(String from, MessageType type, String data, Object candidate, Object sdp, Language language, ProficiencyLevel proficiencyLevel, String roomNumber) {
         this.from = from;
         this.type = type;

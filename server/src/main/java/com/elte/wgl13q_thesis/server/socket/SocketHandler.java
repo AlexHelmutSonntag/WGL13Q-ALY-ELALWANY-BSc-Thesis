@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 @Component
 @Slf4j
@@ -24,13 +26,11 @@ public class SocketHandler extends TextWebSocketHandler {
 
     List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
-
     @Autowired
     private RoomServiceImpl roomServiceImpl;
 
     //    @JsonIgnore
     private final ObjectMapper objectMapper = new ObjectMapper();
-
 
     private Map<String, Room> sessionIdToRoomMap = new HashMap<>();
 
@@ -40,9 +40,7 @@ public class SocketHandler extends TextWebSocketHandler {
 
             WebSocketMessage message = objectMapper.readValue(textMessage.getPayload(), WebSocketMessage.class);
             log.info("[ws] Message of {} type from {} received", message.getType(), message.getFrom());
-//            String userName = message.getFrom(); // origin of the message
             String userName = message.getFrom();
-//            String data = message.getData(); // payload
             String data = message.getData();
             log.info("data: " + data);
             String roomNumberString = Optional.ofNullable(message.getRoomNumber()).orElse("");
@@ -74,6 +72,7 @@ public class SocketHandler extends TextWebSocketHandler {
                         for (Map.Entry<String, WebSocketSession> client : clients.entrySet()) {
                             log.info("Room : " + existingRoom.getId() + " Client key : " + client.getKey());
                             if (!client.getKey().equals(userName)) {
+
                                 sendMessage(client.getValue(),
                                         new WebSocketMessage(
                                                 userName,
@@ -115,7 +114,22 @@ public class SocketHandler extends TextWebSocketHandler {
                             .filter(entry -> Objects.equals(entry.getValue().getId(), session.getId()))
                             .map(Map.Entry::getKey)
                             .findAny();
+                    Map<String, WebSocketSession> clientSessions = roomServiceImpl.getClients(room);
+
+                    clientSessions.keySet().forEach(log::info);
+
+
                     client.ifPresent(c -> roomServiceImpl.removeClientByName(room, c));
+                    for (Map.Entry<String, WebSocketSession> clientEntry : clientSessions.entrySet()) {
+                        log.info("Notifying user : " + clientEntry.getKey() + " that user : " + client.get() + " left");
+                        sendMessage(clientEntry.getValue(),
+                                new WebSocketMessage(
+                                        clientEntry.getKey(),
+                                        MessageType.LEAVE,
+                                        room.getId().toString()
+                                ));
+                    }
+//                    session.close();
                 }
                 default -> {
                     log.info("[ws] Type of the received message {} is undefined!", message.getType());
@@ -123,6 +137,9 @@ public class SocketHandler extends TextWebSocketHandler {
             }
         } catch (IOException e) {
             log.info("An error occurred in SocketHandler.handleTextMessage : {}", e.getMessage());
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+            log.info("Illegal state exception : {}", e.getMessage());
         }
     }
 

@@ -29,7 +29,6 @@ public class RoomServiceImpl implements RoomService {
     }
 
 
-
     public Set<Room> getRooms() {
         final Set<Room> defensiveCopy = new TreeSet<>(Comparator.comparing(Room::getId));
         defensiveCopy.addAll(rooms);
@@ -41,6 +40,22 @@ public class RoomServiceImpl implements RoomService {
         rooms.add(room);
     }
 
+
+    public Set<Room> deleteAllRooms() {
+        Set<Room> returnSet = getRooms();
+        rooms.clear();
+        return returnSet;
+    }
+
+    public Room removeRoom(Integer roomId) {
+        Room roomFound = rooms.stream().filter(room -> room.getId().equals(roomId)).findAny().orElse(null);
+        if (roomFound != null) {
+            rooms.remove(roomFound);
+            return roomFound;
+        }
+        return null;
+    }
+
     public int getLastIdInRooms() {
         int id;
         List<Room> roomsArray = new ArrayList<>(rooms);
@@ -48,12 +63,12 @@ public class RoomServiceImpl implements RoomService {
         log.info("last room id in the set : " + id);
         return id;
     }
+
     @Override
     public RoomRequestBody processRoomSelection(RoomRequestBody requestBody, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             log.info("Error with the binding {}", bindingResult.getFieldError());
         }
-
         int roomIdInt = 1;
         if (rooms.size() != 0) {
             roomIdInt = getLastIdInRooms();
@@ -62,14 +77,11 @@ public class RoomServiceImpl implements RoomService {
         String uuid = requestBody.getUuid();
         ProficiencyLevel level = requestBody.getProficiencyLevel();
         Language language = requestBody.getLanguage();
-//        log.info("processRoomSelection, room : " + roomId);
 
         Optional<Room> roomFound = findRoomByStringId(roomId);
-
         if (roomFound.isEmpty()) {
             Optional<Integer> optionalId = parser.parseId(roomId);
-            addRoom(new Room(roomIdInt,level,language));
-//            optionalId.ifPresent(id -> Optional.ofNullable(uuid).ifPresent(userId -> addRoom(new Room(id, level, language))));
+            addRoom(new Room(roomIdInt, level, language));
             String value = String.format("id : %s , uuid : %s , level : %s , language : %s", optionalId.orElse(null), uuid, level, language);
             log.info("Room created  : " + value);
 
@@ -78,8 +90,6 @@ public class RoomServiceImpl implements RoomService {
         } else {
             return null;
         }
-
-
     }
 
     @Override

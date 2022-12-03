@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React from "react";
 import '../style/Button.scss'
 import {LoginButton} from "./LoginButton";
 import {SignupButton} from "./SignupButton";
@@ -26,7 +26,8 @@ export const Header: React.FC = () => {
         navigate("/");
     }
 
-    const conditionalRef = user.isAuthenticated? "/home" : "/";
+    // const conditionalRef = user.isAuthenticated? "/home" : "/";
+    const conditionalRef = user.isAuthenticated? "/" : "/";
     return (
         <div className={"header"}>
             <AppBar position="static" style={{
@@ -63,16 +64,16 @@ export const Header: React.FC = () => {
                                     Github
                                 </Button>
                             </Box>
-                            <Box>
-                                <Button href={"/docs"} sx={{
-                                    fontSize: 'x-large',
-                                    color: '#1C2541',
-                                    fontWeight: 300,
-                                    textTransform: "none"
-                                }}>
-                                    Docs
-                                </Button>
-                            </Box>
+                            {/*<Box>*/}
+                            {/*    <Button href={"/docs"} sx={{*/}
+                            {/*        fontSize: 'x-large',*/}
+                            {/*        color: '#1C2541',*/}
+                            {/*        fontWeight: 300,*/}
+                            {/*        textTransform: "none"*/}
+                            {/*    }}>*/}
+                            {/*        Docs*/}
+                            {/*    </Button>*/}
+                            {/*</Box>*/}
                             {user.isAuthenticated &&
                                 <Box>
                                     <Button href={"/start"} sx={{
