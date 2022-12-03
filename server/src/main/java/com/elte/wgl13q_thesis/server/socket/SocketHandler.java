@@ -32,7 +32,6 @@ public class SocketHandler extends TextWebSocketHandler {
     //    @JsonIgnore
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-
     private Map<String, Room> sessionIdToRoomMap = new HashMap<>();
 
     //    @Override

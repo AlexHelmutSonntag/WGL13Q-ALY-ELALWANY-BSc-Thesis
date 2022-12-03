@@ -79,6 +79,24 @@ public class RoomController {
         return new ResponseEntity<RoomRequestBody>(this.roomService.displaySelectedRoom(sid, uuid), HttpStatus.OK);
     }
 
+    @DeleteMapping(path = "/{roomId}")
+    public ResponseEntity<?> deleteRoom(@PathVariable("roomId") Integer roomId) {
+        Room removedRoom = roomService.removeRoom(roomId);
+        for (Room room : roomService.getRooms()) {
+            log.info(room.toString());
+        }
+        if (removedRoom != null) {
+            return new ResponseEntity<>(removedRoom, HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Room not found", HttpStatus.BAD_REQUEST);
+    }
+
+    @DeleteMapping(path = "/all")
+    public ResponseEntity<?> deleteAllRooms() {
+        Set<Room> removedRooms = roomService.deleteAllRooms();
+        return new ResponseEntity<>(removedRooms, HttpStatus.OK);
+    }
+
     @GetMapping(path = "/all")
     public ResponseEntity<?> getAllRooms() {
         try {

@@ -1,186 +1,206 @@
 package com.elte.wgl13q_thesis.server.service;
 
+
 import com.elte.wgl13q_thesis.server.model.AppUser;
 import com.elte.wgl13q_thesis.server.model.AppUserRole;
 import com.elte.wgl13q_thesis.server.model.Gender;
 import com.elte.wgl13q_thesis.server.repo.AppUserRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 
+@ActiveProfiles("test")
+@ExtendWith(MockitoExtension.class)
+@SpringBootConfiguration
 @Slf4j
-@ExtendWith({MockitoExtension.class})
-class AppUserServiceTest {
+public class AppUserServiceTest {
 
-    @TestConfiguration
-    public static class TestConfig {
-        @Bean
-        public PasswordEncoder passwordEncoder(){
-            return new BCryptPasswordEncoder();
-        }
-    }
-
+//    @Mock
+    private AppUserService appUserService;
     @Mock
     private AppUserRepository appUserRepository;
-    private AutoCloseable autoCloseable;
-    private AppUserService underTest;
+    @Captor
+    ArgumentCaptor<AppUser> appUserCaptor;
+    @Captor
+    ArgumentCaptor<Long> longCaptor;
+    @Captor
+    ArgumentCaptor<String> stringCaptor;
 
     @BeforeEach
-    void setUp() {
-        autoCloseable = MockitoAnnotations.openMocks(this);
-        underTest = new AppUserService(appUserRepository);
-
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        autoCloseable.close();
+    public void init() {
+        MockitoAnnotations.openMocks(this);
+        appUserService = new AppUserService(appUserRepository);
     }
 
     @Test
-    void getUsers() {
-        underTest.getUsers();
-        verify(appUserRepository).findAll();
-    }
-
-    @Test
-    @Disabled
-    void loadUserByUsername() {
+    public void addNewUser() {
         String username = "test_user";
         String email = "test@user.com";
+        String firstName = "test_user_firstname";
+        String lastName = "test_user_lastname";
+        String password = "test_user_password";
+        Gender gender = Gender.MALE;
+        AppUserRole userRole = AppUserRole.USER;
+        LocalDate dob = LocalDate.of(2000, 10, 20);
         AppUser appUser = new AppUser(
                 username,
-                "test_user_password",
-                "test_user_firstname",
-                "test_user_lastname",
-                AppUserRole.USER,
-                LocalDate.of(2000, 10, 20),
+                password,
+                firstName,
+                lastName,
+                userRole,
+                dob,
                 email,
-                Gender.OTHER);
-        appUserRepository.save(appUser);
-        log.info(appUserRepository.findAll().toString());
-        underTest.loadUserByUsername(username);
-        verify(appUserRepository).findUserByUsername(username);
+                gender
+        );
+        appUserService.addNewUser(appUser);
+        verify(appUserRepository).save(appUserCaptor.capture());
+        String usernameFromCapture = appUserCaptor.getValue().getUsername();
+        String firstNameFromCapture = appUserCaptor.getValue().getFirstName();
+        String lastNameFromCapture = appUserCaptor.getValue().getLastName();
+        String passwordFromCapture = appUserCaptor.getValue().getPassword();
+        String emailFromCapture = appUserCaptor.getValue().getEmail();
+        Gender genderFromCapture = appUserCaptor.getValue().getGender();
+        AppUserRole roleFromCapture = appUserCaptor.getValue().getRole();
+        LocalDate dobFromCapture = appUserCaptor.getValue().getDob();
+
+        assertThat(usernameFromCapture).isNotNull();
+        assertThat(firstNameFromCapture).isNotNull();
+        assertThat(lastNameFromCapture).isNotNull();
+        assertThat(passwordFromCapture).isNotNull();
+        assertThat(emailFromCapture).isNotNull();
+        assertThat(roleFromCapture).isNotNull();
+        assertThat(genderFromCapture).isNotNull();
+        assertThat(dobFromCapture).isNotNull();
+
+        assertThat(usernameFromCapture).isEqualTo(username);
+        assertThat(firstNameFromCapture).isEqualTo(firstName);
+        assertThat(lastNameFromCapture).isEqualTo(lastName);
+        assertThat(emailFromCapture).isEqualTo(email);
+        assertThat(genderFromCapture).isEqualTo(gender);
+        assertThat(roleFromCapture).isEqualTo(userRole);
+        assertThat(dobFromCapture).isEqualTo(dob);
+
     }
 
     @Test
-    void fetchUserFromDBWithUsername() {
-        String username = "test_user";
-        underTest.fetchUserFromDB(username);
-        verify(appUserRepository).findUserByUsername(username);
+    public void deleteUser() {
+        String username = "testuser";
+        String email = "test@user.com";
+        String firstName = "Test";
+        String lastName = "User";
+        String password = "test_user_password";
+        Gender gender = Gender.MALE;
+        AppUserRole userRole = AppUserRole.USER;
+        LocalDate dob = LocalDate.of(2000, 10, 20);
+        AppUser appUser = new AppUser(
+                username,
+                password,
+                firstName,
+                lastName,
+                userRole,
+                dob,
+                email,
+                gender
+        );
+        appUserService.addNewUser(appUser);
+        verify(appUserRepository).findUserByUsername(stringCaptor.capture());
+        String usernameFromCaptor = stringCaptor.getValue();
+        appUserRepository.deleteById(1L);
+        verify(appUserRepository).deleteById(longCaptor.capture());
+        Long userIdFromCaptor = longCaptor.getValue();
+        assertThat(userIdFromCaptor ).isNotNull();
+        assertThat(usernameFromCaptor).isNotNull();
+        assertThat(username).isEqualTo(usernameFromCaptor);
+        assertThrows(UsernameNotFoundException.class,() -> {
+            appUserService.deleteUser(username);
+        });
     }
 
     @Test
-    void testFetchUserFromDBWithId() {
-        Long userId = 1L;
-        underTest.fetchUserFromDB(userId);
-        ArgumentCaptor<Long> userIdArgumentCaptor = ArgumentCaptor.forClass(Long.class);
-        verify(appUserRepository).findById(userIdArgumentCaptor.capture());
-        Long capturedId = userIdArgumentCaptor.getValue();
-        assertThat(capturedId).isEqualTo(userId);
-
-    }
-
-    @Test
-    void addNewUser() {
+    public void updateUser() {
         String username = "test_user";
         String email = "test@user.com";
+        String firstName = "test_user_firstname";
+        String lastName = "test_user_lastname";
+        String password = "test_user_password";
+        Gender gender = Gender.MALE;
+        AppUserRole userRole = AppUserRole.USER;
+        LocalDate dob = LocalDate.of(2000, 10, 20);
         AppUser appUser = new AppUser(
                 username,
-                "test_user_password",
-                "test_user_firstname",
-                "test_user_lastname",
-                AppUserRole.USER,
-                LocalDate.of(2000, 10, 20),
+                password,
+                firstName,
+                lastName,
+                userRole,
+                dob,
                 email,
-                Gender.OTHER
+                gender
+        );
+        appUserService.addNewUser(appUser);
+        String newUsername = "test_user_new";
+        String newEmail = "test_new@user.com";
+        String newFirstName = "test_user_new_firstname";
+        String newLastName = "test_user_new_lastname";
+        String newPassword = "test_user_new_password";
+        Gender newGender = Gender.FEMALE;
+        AppUserRole newUserRole = AppUserRole.ADMIN;
+        LocalDate newDob = LocalDate.of(2000, 12, 15);
+        AppUser newUser = new AppUser(
+                newUsername,
+                newPassword,
+                newFirstName,
+                newLastName,
+                newUserRole,
+                newDob,
+                newEmail,
+                newGender
         );
 
-        underTest.addNewUser(appUser);
 
-        ArgumentCaptor<AppUser> appUserArgumentCaptor = ArgumentCaptor.forClass(AppUser.class);
-        verify(appUserRepository).save(appUserArgumentCaptor.capture());
-
-        AppUser capturedUser = appUserArgumentCaptor.getValue();
-        assertThat(capturedUser).isEqualTo(appUser);
-
+        verify(appUserRepository).findUserByUsername(stringCaptor.capture());
+        verify(appUserRepository).save(appUserCaptor.capture());
+        appUserRepository.findUserByUsername(username);
+        assertThrows(UsernameNotFoundException.class,() -> {
+            appUserService.deleteUser(username);
+        });
     }
 
     @Test
-    @Disabled
-    void deleteUser() {
+    public void fetchUserFromDB() {
         String username = "test_user";
         String email = "test@user.com";
+        String firstName = "test_user_firstname";
+        String lastName = "test_user_lastname";
+        String password = "test_user_password";
+        Gender gender = Gender.MALE;
+        AppUserRole userRole = AppUserRole.USER;
+        LocalDate dob = LocalDate.of(2000, 10, 20);
         AppUser appUser = new AppUser(
                 username,
-                "test_user_password",
-                "test_user_firstname",
-                "test_user_lastname",
-                AppUserRole.USER,
-                LocalDate.of(2000, 10, 20),
+                password,
+                firstName,
+                lastName,
+                userRole,
+                dob,
                 email,
-                Gender.OTHER
+                gender
         );
-        appUserRepository.save(appUser);
-
-        underTest.deleteUser(username);
-
-        ArgumentCaptor<Long> userIdArgumentCaptor = ArgumentCaptor.forClass(Long.class);
-        verify(appUserRepository).deleteById(userIdArgumentCaptor.capture());
-
-        Long capturedId = userIdArgumentCaptor.getValue();
-        log.info(capturedId.toString());
-        assertThat(capturedId).isEqualTo(appUser.getId());
+        appUserService.addNewUser(appUser);
+        assertThrows(UsernameNotFoundException.class,() -> {
+            appUserService.fetchUserFromDB(username);
+        });
     }
 
-    @Test
-    @Disabled
-    void testDeleteUser() {
-    }
-
-    @Test
-    @Disabled
-    void updateUser() {
-    }
-
-    @Test
-    @Disabled
-    void updateUserFirstName() {
-    }
-
-    @Test
-    @Disabled
-    void updateUserRole() {
-    }
-
-    @Test
-    void isEmailTaken() {
-        String email = "test_email";
-        underTest.isEmailTaken(email);
-        verify(appUserRepository).findUserByEmail(email);
-    }
-
-    @Test
-    void isUsernameTaken() {
-        String username = "test_username";
-        underTest.isUsernameTaken(username);
-        verify(appUserRepository).findUserByUsername(username);
-    }
 }

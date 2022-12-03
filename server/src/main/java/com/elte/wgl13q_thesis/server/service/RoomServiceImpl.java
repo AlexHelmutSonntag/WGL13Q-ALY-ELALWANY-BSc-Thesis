@@ -40,6 +40,22 @@ public class RoomServiceImpl implements RoomService {
         rooms.add(room);
     }
 
+
+    public Set<Room> deleteAllRooms() {
+        Set<Room> returnSet = getRooms();
+        rooms.clear();
+        return returnSet;
+    }
+
+    public Room removeRoom(Integer roomId) {
+        Room roomFound = rooms.stream().filter(room -> room.getId().equals(roomId)).findAny().orElse(null);
+        if (roomFound != null) {
+            rooms.remove(roomFound);
+            return roomFound;
+        }
+        return null;
+    }
+
     public int getLastIdInRooms() {
         int id;
         List<Room> roomsArray = new ArrayList<>(rooms);

@@ -82,6 +82,10 @@ public class AppUserService implements UserDetailsService {
         appUserRepository.save(appUser);
         return true;
     }
+    public Long getUserId(String username){
+        Optional<AppUser> appUser= appUserRepository.findUserByUsername(username);
+        return appUser.map(AppUser::getId).orElse(null);
+    }
 
     public void deleteUser(String username) {
         try {
@@ -184,4 +188,7 @@ public class AppUserService implements UserDetailsService {
         return userOptional.isPresent();
     }
 
+    public String encodePassword(String password){
+        return passwordEncoder().encode(password);
+    }
 }
