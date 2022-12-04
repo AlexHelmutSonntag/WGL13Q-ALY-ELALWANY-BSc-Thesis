@@ -23,7 +23,6 @@ import static org.mockito.Mockito.verify;
 
 @ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
-@SpringBootConfiguration
 @Slf4j
 public class AppUserServiceTest {
 
@@ -43,6 +42,8 @@ public class AppUserServiceTest {
         MockitoAnnotations.openMocks(this);
         appUserService = new AppUserService(appUserRepository);
     }
+
+
 
     @Test
     public void addNewUser() {
@@ -94,6 +95,66 @@ public class AppUserServiceTest {
 
     }
 
+    @Test
+    public void addUserAndCheckCallOfFunctions(){
+        String username = "testuser";
+        String email = "test@user.com";
+        String firstName = "test_user_firstname";
+        String lastName = "test_user_lastname";
+        String password = "test_user_password";
+        Gender gender = Gender.MALE;
+        AppUserRole userRole = AppUserRole.USER;
+        LocalDate dob = LocalDate.of(2000, 10, 20);
+        AppUser appUser = new AppUser(
+                username,
+                password,
+                firstName,
+                lastName,
+                userRole,
+                dob,
+                email,
+                gender
+        );
+        boolean created = appUserService.addNewUser(appUser);
+        verify(appUserRepository).findUserByEmail(stringCaptor.capture());
+        String emailFromCaptor = stringCaptor.getValue();
+        verify(appUserRepository).findUserByUsername(stringCaptor.capture());
+        String usernameFromCaptor = stringCaptor.getValue();
+        log.info(emailFromCaptor);
+        log.info(usernameFromCaptor);
+        created = appUserService.addNewUser(appUser);
+        log.info(String.valueOf(created));
+    }
+
+    @Test
+    public void deleteUserAndCheckCallOfFunctions() {
+        String username = "testuser";
+        String email = "test@user.com";
+        String firstName = "Test";
+        String lastName = "User";
+        String password = "test_user_password";
+        Gender gender = Gender.MALE;
+        AppUserRole userRole = AppUserRole.USER;
+        LocalDate dob = LocalDate.of(2000, 10, 20);
+        AppUser appUser = new AppUser(
+                username,
+                password,
+                firstName,
+                lastName,
+                userRole,
+                dob,
+                email,
+                gender
+        );
+        appUserService.addNewUser(appUser);
+        verify(appUserRepository).findUserByUsername(stringCaptor.capture());
+        String usernameFromCaptor = stringCaptor.getValue();
+        assertThat(usernameFromCaptor).isNotNull();
+        assertThat(username).isEqualTo(usernameFromCaptor);
+        assertThrows(UsernameNotFoundException.class,() -> {
+            appUserService.deleteUser(username);
+        });
+    }
     @Test
     public void deleteUser() {
         String username = "testuser";
