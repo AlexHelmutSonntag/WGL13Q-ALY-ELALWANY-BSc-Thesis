@@ -51,7 +51,7 @@ public class RoomServiceImpl implements RoomService {
 
     public Room removeRoom(Integer roomId) {
         Room roomFound = rooms.stream().filter(room -> room.getId().equals(roomId)).findAny().orElse(null);
-        if (roomFound != null) {
+        if (roomFound != null && roomFound.getClients().size()==0) {
             rooms.remove(roomFound);
             return roomFound;
         }

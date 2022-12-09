@@ -146,7 +146,13 @@ public class SocketHandler extends TextWebSocketHandler {
     //    @Override
     public void afterConnectionClosed(final WebSocketSession session, @NonNull final CloseStatus status) {
         log.debug("[ws] Session has been closed with status {}", status);
+        Room room = sessionIdToRoomMap.get(session.getId());
         sessionIdToRoomMap.remove(session.getId());
+        Optional<String> client = roomServiceImpl.getClients(room).entrySet().stream()
+                .filter(entry -> Objects.equals(entry.getValue().getId(), session.getId()))
+                .map(Map.Entry::getKey)
+                .findFirst();
+        client.ifPresent(c -> roomServiceImpl.removeClientByName(room, c));
     }
 
     //    @Override

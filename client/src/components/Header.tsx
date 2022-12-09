@@ -8,8 +8,9 @@ import {AppBar, Box, Button, Toolbar, Typography} from "@mui/material";
 import PersonIcon from '@mui/icons-material/Person';
 import {useNavigate} from "react-router-dom";
 import {useAppDispatch, useAppSelector} from "../store/hooks";
-import {removeUser, selectUser} from "../feature/user/userSlice";
+import {removeUser, selectUser, setAuthenticated} from "../feature/user/userSlice";
 import {removeToken} from "../feature/token/tokenSlice";
+import {Role} from "../Types";
 
 interface HeaderProps {
     loggedIn: boolean;
@@ -22,7 +23,9 @@ export const Header: React.FC = () => {
     const logOutUser: any = () => {
         dispatch({type:"USER_LOGOUT"});
         dispatch(removeToken(""))
+        dispatch(setAuthenticated(false))
         dispatch(removeUser(""))
+
         navigate("/");
     }
 
@@ -86,6 +89,18 @@ export const Header: React.FC = () => {
                                     </Button>
                                 </Box>
                             }
+                            {user.role=== "ADMIN" &&
+                                <Box>
+                                    <Button href={"/admin"} sx={{
+                                        fontSize: 'x-large',
+                                        color: '#e80d25',
+                                        fontWeight: 200,
+                                        textTransform: "none"
+                                    }}>
+                                        Admin Panel
+                                    </Button>
+                                </Box>
+                            }
                         </div>
                         <div className={"login-signup-buttons"}>
                             <Box style={{
@@ -99,7 +114,7 @@ export const Header: React.FC = () => {
                                         <LoginButton onClick={logOutUser}>Logout</LoginButton>,
                                         <a href={"/account"}>
                                             <PersonIcon style={{
-                                                "color": "#1C2541",
+                                                "color": user.role === Role.USER ? "#1C2541" : "#e80d25",
                                                 "fontSize": "200%",
                                                 "marginLeft": "20px",
                                                 "marginRight": "10px",

@@ -1,9 +1,11 @@
 package com.elte.wgl13q_thesis.server.controller;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.elte.wgl13q_thesis.server.model.Room;
 import com.elte.wgl13q_thesis.server.model.RoomRequestBody;
 import com.elte.wgl13q_thesis.server.service.RoomService;
 import com.elte.wgl13q_thesis.server.service.RoomServiceImpl;
+import com.elte.wgl13q_thesis.server.util.AuthUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.expression.spel.ast.NullLiteral;
@@ -14,7 +16,11 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.*;
+
+import static java.util.Arrays.stream;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 
 @RestController
@@ -80,15 +86,20 @@ public class RoomController {
     }
 
     @DeleteMapping(path = "/{roomId}")
-    public ResponseEntity<?> deleteRoom(@PathVariable("roomId") Integer roomId) {
-        Room removedRoom = roomService.removeRoom(roomId);
-        for (Room room : roomService.getRooms()) {
-            log.info(room.toString());
+    public ResponseEntity<?> deleteRoom(@PathVariable("roomId") Integer roomId, @RequestHeader(AUTHORIZATION) String authorizationHeader) {
+        try {
+            DecodedJWT decodedJWT = AuthUtils.createDecodedJWT(authorizationHeader);
+            String[] roles = AuthUtils.getRolesFromDecodedJWT(decodedJWT);
+            if (stream(roles).anyMatch(role -> role.equalsIgnoreCase("ADMIN"))) {
+                Room removedRoom = roomService.removeRoom(roomId);
+                if (removedRoom != null) {
+                    return new ResponseEntity<>(removedRoom, HttpStatus.OK);
+                }
+            }
+            return new ResponseEntity<>("Room not found", HttpStatus.BAD_REQUEST);
+        } catch (IOException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        if (removedRoom != null) {
-            return new ResponseEntity<>(removedRoom, HttpStatus.OK);
-        }
-        return new ResponseEntity<>("Room not found", HttpStatus.BAD_REQUEST);
     }
 
     @DeleteMapping(path = "/all")

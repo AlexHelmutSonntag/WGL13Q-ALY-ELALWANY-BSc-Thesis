@@ -16,7 +16,7 @@ export const isValidEmail = (email: string) => {
 
 
 export const isValidUsername = (username: string) => {
-    const re = /^[a-zA-Z0-9]+([_ -]?[a-zA-Z0-9])*$/
+    const re = /^[a-zA-Z0-9]+([_.-]?[a-zA-Z0-9])*$/
     return re.test(username);
 }
 

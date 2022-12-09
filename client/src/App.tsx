@@ -20,10 +20,26 @@ import {selectToken} from "./feature/token/tokenSlice";
 // import {Tester} from "./components/Tester";
 import {IndexPage} from "./components/IndexPage";
 import {RoomPage} from "./components/RoomPage";
+import {AdminPage} from "./components/AdminPage";
+import {selectRooms} from "./feature/rooms/roomsSlice";
 
+
+const generateRoomsRoutes = (rooms: RoomState[]) => {
+    console.log(JSON.stringify(rooms))
+    return (rooms.map(room =>
+            <Route path={`/room/${room.roomID}`}
+                   element={<RoomPage
+                       language={room.language}
+                       clients={[]}
+                       proficiencyLevel={room.proficiencyLevel}
+                       roomID={room.roomID} createdAt={room.createdAt}/>}/>
+        )
+    )
+}
 
 const App: React.FC = () => {
     const token = useAppSelector(selectToken)
+    const rooms = useAppSelector(selectRooms)
     const [accessToken, setAccessToken] = React.useState<string>(token ? token : "");
     const [selectedRoom, setSelectedRoom] = React.useState<RoomState>({
         language: Language.GERMAN,
@@ -112,13 +128,9 @@ const App: React.FC = () => {
                                                          gender={userFromStore.gender}
                            />}/>
                     <Route path={"/start"} element={<StartPage passValuesToParent={receiveRoomFromStartPage}/>}/>
+                    <Route path={"/admin"} element={<AdminPage/>}/>
                     <Route path={"/"} element={<IndexPage/>}/>
-                    <Route path={`/room/${selectedRoom.roomID}`}
-                           element={<RoomPage
-                               language={selectedRoom.language}
-                               clients={[]}
-                               proficiencyLevel={selectedRoom.proficiencyLevel}
-                               roomID={selectedRoom.roomID} createdAt={selectedRoom.createdAt}/>}/>
+                    {generateRoomsRoutes(rooms)}
                     <Route path={"*"} element={<PageNotFound/>}/>
                 </Routes>
                 <Footer/>

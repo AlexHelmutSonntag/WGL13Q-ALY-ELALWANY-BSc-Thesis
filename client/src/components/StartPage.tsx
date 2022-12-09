@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {Navigate, useNavigate} from "react-router-dom";
+import {Navigate, redirect, useNavigate} from "react-router-dom";
 import {useAppDispatch, useAppSelector} from "../store/hooks";
 import {selectUser} from "../feature/user/userSlice";
 import {RoomFilter} from "./RoomFilter";
@@ -19,6 +19,7 @@ import axios from "axios";
 import {selectClient} from "../feature/client/clientSlice";
 import {selectToken} from "../feature/token/tokenSlice";
 import {languageOptions, levelOptions} from "../Utils";
+import {addRoom, removeAllRooms, selectRooms} from "../feature/rooms/roomsSlice";
 
 
 const renderRoomsList = (list: Array<RoomState>, filterState: FilterState, clickHandler: (item: RoomState) => any) => {
@@ -28,8 +29,6 @@ const renderRoomsList = (list: Array<RoomState>, filterState: FilterState, click
     }
 
     return list.map((item: RoomState) => {
-        // console.log("here")
-        // let strList = Object.values(item).join("\t")
         let strList = `${item.language}\t${item.proficiencyLevel}\t${item.capacity}\t${item.createdAt}\t#${item.roomID}`
         return <ListItem disablePadding style={{
             border: "2px solid grey",
@@ -121,6 +120,9 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
     });
     const [rooms, setRooms] = React.useState<Array<RoomState>>([]);
     const [openCreateRoomDialog, setOpenCreateRoomDialog] = React.useState(false);
+    const roomsInStore = useAppSelector(selectRooms)
+    const dispatch = useAppDispatch()
+
     const [filterState, setFilterState] = React.useState<FilterState>({
         language: Language.GERMAN,
         proficiencyLevel: ProficiencyLevel.BEGINNER,
@@ -147,6 +149,11 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
 
     const handleRoomClick = (room: RoomState) => {
         props.passValuesToParent(room)
+        let roomFull = (room?.capacity ?? 0) >= 2;
+        if (roomFull) {
+            alert("Room is full!");
+            return;
+        }
         navigate(`/room/${room.roomID}`);
     }
 
@@ -171,6 +178,7 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
                 console.log(response)
                 if (response.status === 201) {
                     alert("Room created");
+
                     getRooms();
                 } else {
                     alert("Server error!");
@@ -212,7 +220,7 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
                         list.push(response.data[i].entry)
                     }
                     let roomSet: Set<RoomState> = new Set<RoomState>();
-
+                    dispatch(removeAllRooms)
                     list.map((entry: any) => {
                         let roomObj: RoomState = {
                             language: entry.language,
@@ -222,14 +230,22 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
                             clients: entry.clients.length !== 0 ? entry.clients : [],
                             roomID: entry.roomNumber,
                         }
+
                         roomSet.add(roomObj);
                         setRooms(Array.from(roomSet));
+                        dispatch(addRoom(roomObj))
                     })
+
+
+                } else {
+                    console.log(`Here ${response.status}`);
                 }
             }
         ).catch((error) => {
-            console.log(error)
-            // alert(error.response.data.error_message);
+            if (error.response.status === 403) {
+                console.log(error.response);
+                alert('Your login token expired, please logout and login again.');
+            }
         });
     }
     renderRoomsList(rooms, filterState, handleRoomClick);

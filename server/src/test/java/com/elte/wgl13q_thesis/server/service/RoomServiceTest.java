@@ -102,6 +102,4 @@ public class RoomServiceTest {
         Assertions.assertEquals(3,lastId);
     }
 
-
-
 }

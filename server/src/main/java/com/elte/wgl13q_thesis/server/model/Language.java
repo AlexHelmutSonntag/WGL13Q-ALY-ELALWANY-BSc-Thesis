@@ -7,7 +7,6 @@ public enum Language {
     SPANISH("Spanish"),
     FRENCH("French"),
     ARABIC("Arabic"),
-    BELGIAN("Belgian"),
     DUTCH("Dutch"),
     NORWEGIAN("Norwegian"),
     SWEDISH("Swedish"),

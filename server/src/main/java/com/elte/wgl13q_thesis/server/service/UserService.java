@@ -2,7 +2,6 @@ package com.elte.wgl13q_thesis.server.service;
 
 import com.elte.wgl13q_thesis.server.model.AppUser;
 import com.elte.wgl13q_thesis.server.model.AppUserRole;
-import com.elte.wgl13q_thesis.server.model.Role;
 
 import java.util.List;
 

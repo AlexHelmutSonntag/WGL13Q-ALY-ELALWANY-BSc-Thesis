@@ -16,7 +16,6 @@ export enum Language {
     SPANISH = "SPANISH",
     FRENCH = "FRENCH",
     ARABIC ="ARABIC",
-    BELGIAN = "BELGIAN",
     DUTCH= "DUTCH",
     TURKISH ="TURKISH",
     SWEDISH ="SWEDISH",
