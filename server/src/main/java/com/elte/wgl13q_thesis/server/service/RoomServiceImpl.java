@@ -21,7 +21,6 @@ public class RoomServiceImpl implements RoomService {
     private final Parser parser;
     // repository substitution
     private final Set<Room> rooms = new TreeSet<>(Comparator.comparing(Room::getId));
-//    private final Set<Room> rooms = new HashSet<>();
 
     @Autowired
     public RoomServiceImpl(final Parser parser) {
@@ -40,16 +39,19 @@ public class RoomServiceImpl implements RoomService {
         rooms.add(room);
     }
 
-
     public Set<Room> deleteAllRooms() {
         Set<Room> returnSet = getRooms();
         rooms.clear();
         return returnSet;
     }
 
+    public Room getRoom(Integer id){
+        return rooms.stream().filter(room-> room.getId().equals(id)).findFirst().orElse(null);
+    }
+
     public Room removeRoom(Integer roomId) {
         Room roomFound = rooms.stream().filter(room -> room.getId().equals(roomId)).findAny().orElse(null);
-        if (roomFound != null) {
+        if (roomFound != null && roomFound.getClients().size()==0) {
             rooms.remove(roomFound);
             return roomFound;
         }
@@ -95,15 +97,12 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public RoomRequestBody displaySelectedRoom(String sid, String uuid) {
         log.info("displaySelectedRoom -  sid : {}  uuid : {}", sid, uuid);
-
         if (parser.parseId(sid).isPresent()) {
             Room room = findRoomByStringId(sid).orElse(null);
             if (room != null && uuid != null && !uuid.isEmpty()) {
                 log.debug("User {} is going to join Room #{}", uuid, sid);
                 // open the chat room
                 return new RoomRequestBody(sid, uuid);
-//                modelAndView = new ModelAndView("chat_room", "id", sid);
-//                modelAndView.addObject("uuid", uuid);
             }
         }
         return null;

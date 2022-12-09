@@ -34,7 +34,7 @@ export const IndexPage: React.FC = () => {
 
     return <div id={"index-container"}>
         <div id={"index-header"}>
-            <h1>Learn languages with LanX; the first conversation-oriented platform for learning languages.</h1>
+            <h1>Learn languages with LanX; the conversation-oriented platform for learning languages.</h1>
             <h2>Here, you can learn all these languages and many more!</h2>
         </div>
 
