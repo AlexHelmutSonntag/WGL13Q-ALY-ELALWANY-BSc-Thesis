@@ -83,7 +83,7 @@ public class RoomControllerTest {
     }
 
     public static void createRoom(String uuId, Language language, ProficiencyLevel level) {
-        String roomId = "1";
+        String roomId = "9";
         RoomRequestBody roomRequestBody = new RoomRequestBody(roomId, uuId, level, language);
         authSetupWithCredentials(AUTH_USER_USERNAME, AUTH_USER_SECRET);
         String accessToken = env.get("access_token");
@@ -248,7 +248,7 @@ public class RoomControllerTest {
     }
     @Test
     public void shouldFailOnGetRoomWithInvalidId() {
-        createRoom("ac309a95-2ae5-450d-bfbd-24f1be34531y", Language.GERMAN, ProficiencyLevel.NATIVE);
+
         authSetupWithCredentials(AUTH_USER_USERNAME, AUTH_USER_SECRET);
 
         String accessToken = env.get("access_token");
@@ -359,7 +359,7 @@ public class RoomControllerTest {
     }
 
     @Test
-    public void shouldDeleteAllRoomsWithInvalidToken() {
+    public void shouldFailOnDeleteAllRoomsWithInvalidToken() {
         authSetupWithCredentials(AUTH_USER_USERNAME, AUTH_USER_SECRET);
         String accessToken = env.get("access_token");
         accessToken = accessToken.substring(0, accessToken.length() / 2);
@@ -376,5 +376,100 @@ public class RoomControllerTest {
         Assertions.assertEquals(HTTP_FORBIDDEN, response.getStatusCode());
     }
 
+
+    @Test
+    public void shouldDeleteRoom() {
+        authSetupWithCredentials(AUTH_ADMIN_USERNAME, AUTH_ADMIN_SECRET);
+        String accessToken = env.get("access_token");
+        String roomId = "1";
+        ProficiencyLevel proficiencyLevel = ProficiencyLevel.NATIVE;
+        Language language = Language.GERMAN;
+        createRoom(roomId,language,proficiencyLevel);
+        Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .and()
+                .auth()
+                .oauth2(accessToken)
+                .delete("/api/v1/room/"+roomId)
+                .then()
+                .extract()
+                .response();
+
+        Assertions.assertEquals(HTTP_OK, response.getStatusCode());
+        response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .and()
+                .auth()
+                .oauth2(accessToken)
+                .get("/api/v1/room/"+roomId)
+                .then()
+                .extract()
+                .response();
+        Assertions.assertEquals(HTTP_NOT_FOUND, response.getStatusCode());
+    }
+    @Test
+    public void shouldFailOnDeleteRoomWithInvalidToken() {
+        authSetupWithCredentials(AUTH_ADMIN_USERNAME, AUTH_ADMIN_SECRET);
+        String accessToken = env.get("access_token");
+        accessToken = accessToken.substring(0,accessToken.length()/2);
+
+        Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .and()
+                .auth()
+                .oauth2(accessToken)
+                .delete("/api/v1/room/"+1)
+                .then()
+                .extract()
+                .response();
+        Assertions.assertEquals(HTTP_FORBIDDEN, response.getStatusCode());
+    }
+    @Test
+    public void shouldFailOnDeleteRoomWithNoToken() {
+        Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .and()
+                .delete("/api/v1/room/"+1)
+                .then()
+                .extract()
+                .response();
+        Assertions.assertEquals(HTTP_FORBIDDEN, response.getStatusCode());
+    }
+    @Test
+    public void shouldFailOnDeleteRoomWithInvalidNumber() {
+        authSetupWithCredentials(AUTH_ADMIN_USERNAME, AUTH_ADMIN_SECRET);
+        String accessToken = env.get("access_token");
+        Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .and()
+                .auth()
+                .oauth2(accessToken)
+                .delete("/api/v1/room/"+"-1")
+                .then()
+                .extract()
+                .response();
+        Assertions.assertEquals(HTTP_NOT_FOUND, response.getStatusCode());
+    }
+    @Test
+    public void shouldFailOnDeleteRoomWithInvalidAccess() {
+        authSetupWithCredentials(AUTH_USER_USERNAME, AUTH_USER_SECRET);
+        String accessToken = env.get("access_token");
+        Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .and()
+                .auth()
+                .oauth2(accessToken)
+                .delete("/api/v1/room/"+"-1")
+                .then()
+                .extract()
+                .response();
+        Assertions.assertEquals(HTTP_FORBIDDEN, response.getStatusCode());
+    }
 
 }
