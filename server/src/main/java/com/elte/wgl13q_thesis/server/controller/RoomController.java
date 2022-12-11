@@ -94,9 +94,12 @@ public class RoomController {
                 Room removedRoom = roomService.removeRoom(roomId);
                 if (removedRoom != null) {
                     return new ResponseEntity<>(removedRoom, HttpStatus.OK);
+                }else{
+                    return new ResponseEntity<>("Room not found", HttpStatus.NOT_FOUND);
                 }
             }
-            return new ResponseEntity<>("Room not found", HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>("Room not found", HttpStatus.FORBIDDEN);
+
         } catch (IOException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
