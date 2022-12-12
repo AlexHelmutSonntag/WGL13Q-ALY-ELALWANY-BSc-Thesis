@@ -31,7 +31,6 @@ import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequestMapping(path = "api/v1/user")
-//@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000","http://192.168.0.218:3000","*"})
 @Slf4j
 public class AppUserController {
 
@@ -110,16 +109,6 @@ public class AppUserController {
         }
     }
 
-    //    @PutMapping(path = "/updateUserDetails/{username}")
-//    public ResponseEntity<String> updateUserDetails(@PathVariable("username") String username,
-//                                                    @RequestParam(required = true) String firstName,
-//                                                    @RequestParam(required = true) String lastName,
-//                                                    @RequestParam(required = true) String email,
-//                                                    @RequestParam(required = true)String password) {
-//        appUserService.updateUser(username, firstName, lastName, email, password);
-//        return new ResponseEntity<String>("User updated!", HttpStatus.OK);
-//    }
-
     @PutMapping(path = "/updateUser/{username}")
     public ResponseEntity<?> updateUserDetails(@RequestHeader(AUTHORIZATION) String authorizationHeader, @PathVariable("username") String username,
                                                @RequestBody AppUser appUser, HttpServletResponse response) throws Exception {
@@ -151,22 +140,6 @@ public class AppUserController {
             return new ResponseEntity<String>("Cannot update user!", INTERNAL_SERVER_ERROR);
         }
     }
-
-//    @PutMapping(path = "/updateUserDetails/{userId}")
-//    public void updateUserFirstName(
-//            @PathVariable("userId") Long userId,
-//            @RequestParam(required = true) String firstName,
-//            @RequestParam(required = false) String email) {
-//        appUserService.updateUserFirstName(userId, firstName, email);
-//    }
-
-//    @PatchMapping(path = "userId")
-//    public void removeUserRole(
-//            @PathVariable("userId") Long userId,
-//            @RequestParam(required = true) AppUserRole role
-//    ) {
-//        appUserService.removeUserRole(userId, role);
-//    }
 
     @GetMapping(path = "/token/refresh")
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -204,12 +177,5 @@ public class AppUserController {
         }
     }
 
-    @PatchMapping(path = "/addRole/{userId}")
-    public void updateUserRole(
-            @PathVariable("userId") Long userId,
-            @RequestParam(required = true) AppUserRole role
-    ) {
-        appUserService.updateUserRole(userId, role);
-    }
 
 }

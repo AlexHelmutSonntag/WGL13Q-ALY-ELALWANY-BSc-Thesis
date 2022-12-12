@@ -68,25 +68,5 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         return source;
     }
-//
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http.csrf().disable();
-//        http.sessionManagement().sessionCreationPolicy(STATELESS);
-//        http.authorizeHttpRequests((authorize) -> authorize.anyRequest().permitAll()).httpBasic(withDefaults());
-//
-//        log.info("I am here at {} !" , Timestamp.from(Instant.EPOCH));
-//        return http.build();
-//    }
-
-//    @Bean
-//    public InMemoryUserDetailsManager userDetailsService() {
-//        UserDetails user = User.withDefaultPasswordEncoder()
-//                .username("user")
-//                .password("password")
-//                .roles("USER")
-//                .build();
-//        return new InMemoryUserDetailsManager(user);
-//    }
 
 }

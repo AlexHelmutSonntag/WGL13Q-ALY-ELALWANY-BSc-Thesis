@@ -12,6 +12,7 @@ import org.springframework.expression.spel.ast.NullLiteral;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,7 +26,6 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @RestController
 @RequestMapping(path = "api/v1/room")
-//@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000","http://192.168.0.218:3000","*"})
 @Slf4j
 public class RoomController {
 
@@ -80,26 +80,33 @@ public class RoomController {
                 response, HttpStatus.CREATED);
     }
 
-    @GetMapping(path = "/{sid}/user/{uuid}")
-    public ResponseEntity<?> displaySelectedRoom(@PathVariable("sid") final String sid, @PathVariable("uuid") final String uuid) {
-        return new ResponseEntity<RoomRequestBody>(this.roomService.displaySelectedRoom(sid, uuid), HttpStatus.OK);
-    }
+//    @GetMapping(path = "/{sid}/user/{uuid}")
+//    public ResponseEntity<?> displaySelectedRoom(@PathVariable("sid") final String sid, @PathVariable("uuid") final String uuid) {
+//        return new ResponseEntity<RoomRequestBody>(this.roomService.displaySelectedRoom(sid, uuid), HttpStatus.OK);
+//    }
 
     @DeleteMapping(path = "/{roomId}")
     public ResponseEntity<?> deleteRoom(@PathVariable("roomId") Integer roomId, @RequestHeader(AUTHORIZATION) String authorizationHeader) {
         try {
             DecodedJWT decodedJWT = AuthUtils.createDecodedJWT(authorizationHeader);
             String[] roles = AuthUtils.getRolesFromDecodedJWT(decodedJWT);
+            for (String role :
+                    roles) {
+                log.info(role);
+            }
             if (stream(roles).anyMatch(role -> role.equalsIgnoreCase("ADMIN"))) {
+                String roomIdString = roomId.toString();
+                Optional<Room> roomOptional = roomService.findRoomByStringId(roomIdString);
+                log.info(String.valueOf(roomOptional.isEmpty()));
+                if (roomOptional.isEmpty()) {
+                    return new ResponseEntity<>("Room not found", HttpStatus.NOT_FOUND);
+                }
                 Room removedRoom = roomService.removeRoom(roomId);
                 if (removedRoom != null) {
                     return new ResponseEntity<>(removedRoom, HttpStatus.OK);
-                }else{
-                    return new ResponseEntity<>("Room not found", HttpStatus.NOT_FOUND);
                 }
             }
-                return new ResponseEntity<>("Room not found", HttpStatus.FORBIDDEN);
-
+            return new ResponseEntity<>("Unauthorized!", HttpStatus.FORBIDDEN);
         } catch (IOException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -134,12 +141,6 @@ public class RoomController {
             return new ResponseEntity<>("Server issue encountered " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-    @GetMapping(path = "/random")
-    public ResponseEntity<?> requestRandomRoomNumber(@RequestBody RoomRequestBody body) {
-        return new ResponseEntity<RoomRequestBody>(roomService.requestRandomRoomNumber(body.getUuid()), HttpStatus.OK);
-    }
-
 }
 
 class RoomResponse {

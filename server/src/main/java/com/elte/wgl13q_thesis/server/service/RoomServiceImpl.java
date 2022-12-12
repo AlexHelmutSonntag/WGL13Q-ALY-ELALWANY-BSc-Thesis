@@ -19,7 +19,6 @@ import java.util.concurrent.ThreadLocalRandom;
 @Slf4j
 public class RoomServiceImpl implements RoomService {
     private final Parser parser;
-    // repository substitution
     private final Set<Room> rooms = new TreeSet<>(Comparator.comparing(Room::getId));
 
     @Autowired
@@ -45,13 +44,13 @@ public class RoomServiceImpl implements RoomService {
         return returnSet;
     }
 
-    public Room getRoom(Integer id){
-        return rooms.stream().filter(room-> room.getId().equals(id)).findFirst().orElse(null);
+    public Room getRoom(Integer id) {
+        return rooms.stream().filter(room -> room.getId().equals(id)).findFirst().orElse(null);
     }
 
     public Room removeRoom(Integer roomId) {
         Room roomFound = rooms.stream().filter(room -> room.getId().equals(roomId)).findAny().orElse(null);
-        if (roomFound != null && roomFound.getClients().size()==0) {
+        if (roomFound != null && roomFound.getClients().size() == 0) {
             rooms.remove(roomFound);
             return roomFound;
         }
@@ -59,9 +58,19 @@ public class RoomServiceImpl implements RoomService {
     }
 
     public int getLastIdInRooms() {
-        int id;
+        int id = 0;
         List<Room> roomsArray = new ArrayList<>(rooms);
-        id = roomsArray.size() + 1;
+
+        for (Room room : roomsArray) {
+            if (room.getId() > id) {
+                id = room.getId();
+            }
+        }
+        if (id == 0) {
+            id = 1;
+        } else {
+            id = id + 1;
+        }
         log.info("last room id in the set : " + id);
         return id;
     }
@@ -108,28 +117,9 @@ public class RoomServiceImpl implements RoomService {
         return null;
     }
 
-    @Override
-    public WebSocketSession processRoomExit(String sid, String uuid) {
-        if (sid != null && uuid != null) {
-            log.debug("User {} has left Room #{}", uuid, sid);
-            Optional<Room> room = findRoomByStringId(sid);
-            if (room.isPresent()) {
-                return removeClientByName(room.get(), uuid);
-            }
-        }
-        return null;
-    }
 
     public WebSocketSession removeClientByName(final Room room, final String name) {
         return room.getClients().remove(name);
-    }
-
-    @Override
-    public RoomRequestBody requestRandomRoomNumber(String uuid) {
-        Long rand = this.randomValue();
-        log.info("uuid : {}", uuid);
-        log.info("requestRandomRoomNumber : {}", rand);
-        return new RoomRequestBody(rand.toString(), uuid);
     }
 
     public Optional<Room> findRoomByStringId(final String sid) {
@@ -150,11 +140,5 @@ public class RoomServiceImpl implements RoomService {
     public void addClient(final Room room, final String name, final WebSocketSession session) {
         room.getClients().put(name, session);
     }
-
-
-    private Long randomValue() {
-        return ThreadLocalRandom.current().nextLong(0, 100);
-    }
-
 
 }

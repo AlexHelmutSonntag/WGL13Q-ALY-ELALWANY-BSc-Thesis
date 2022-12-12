@@ -1,8 +1,11 @@
-import axios from "axios";
 import {v4 as uuidv4} from 'uuid';
-import {Language, ProficiencyLevel} from "./Types";
-import {MenuItem} from "@mui/material";
+import {FilterState, Language, ProficiencyLevel, RoomState} from "./Types";
+import {MenuItem, Paper, Table, TableCell, TableContainer, TableHead, TableRow} from "@mui/material";
 import React from "react";
+import axios, {AxiosError, AxiosResponse} from "axios";
+import {addRoom, removeAllRooms} from "./feature/rooms/roomsSlice";
+import {Simulate} from "react-dom/test-utils";
+import error = Simulate.error;
 
 export const stringToDate = (date: String) => {
     let dd_mm_yyyy = date;
@@ -64,33 +67,6 @@ export const validatePasswordInput = (password: string, repeatedPassword: string
 }
 
 
-export const fetchUserDetails = (username: string, config: any) => {
-    axios.get(`http://192.168.0.218:8080/api/v1/user/${username}`,
-        config,
-    ).then((response) => {
-            console.log(response);
-            if (response.status === 200) {
-                console.log(response.data);
-                return response.data;
-                // setUserState(
-                //     {
-                //         username: response.data.username,
-                //         firstName: response.data.firstName,
-                //         lastName: response.data.lastName,
-                //         gender: response.data.gender,
-                //         role: response.data.role,
-                //         email: response.data.email,
-                //         dob: response.data.dob,
-                //         password: response.data.password
-                //     }
-                // )
-                // console.log(`Inside fetch ${userState}`);
-            }
-        }
-    ).catch((error) => console.log(error));
-}
-
-
 export const levelOptions = () => {
     let list = [];
     for (let level in ProficiencyLevel) {
@@ -112,7 +88,6 @@ export const capacityOptions = () => {
         return <MenuItem value={capacity}>{capacity}</MenuItem>
     });
 }
-
 
 export const validateBothNames = (firstName: string, lastName: string, msgDisplayRef: React.RefObject<HTMLDivElement>, setErrorMessage: React.Dispatch<React.SetStateAction<String>>) => {
     if (!firstName || !lastName) {
@@ -167,6 +142,103 @@ export const validatePasswordSecurity = (password: string, repeatedPassword: str
         return false;
     }
     return true;
+}
+
+
+export const getRooms = async (config: any) => {
+    try {
+        let response = await axios.get('https://192.168.0.218:8080/api/v1/room/all',
+            config);
+        let list = [];
+
+        if (response.status === 200) {
+            for (let i = 0; i < response.data.length; i++) {
+                // console.log(response.data[i].entry)
+                list.push(response.data[i].entry)
+            }
+            let roomsList : Array<RoomState> = new Array<RoomState>();
+            list.map((entry: any) => {
+                let roomObj: RoomState = {
+                    language: entry.language,
+                    proficiencyLevel: entry.proficiencyLevel,
+                    capacity: entry.clients.length,
+                    createdAt: entry.createdAt,
+                    clients: entry.clients.length !== 0 ? entry.clients : [],
+                    roomID: entry.roomNumber,
+                }
+                roomsList.push(roomObj);
+            });
+            return roomsList;
+        } else {
+            console.log(`Here ${response.status}`);
+        }
+    } catch (error:any) {
+        if (error.response.status === 403) {
+            console.log(error.response);
+            alert('Your login token expired, please logout and login again.');
+        }
+    }
+
+}
+
+export const filterRooms = (list: Array<RoomState>, filterState: FilterState) => {
+    return list.filter(room => room.capacity === filterState.capacity && room.language === filterState.language && room.proficiencyLevel === filterState.proficiencyLevel);
+}
+export const renderRoomsTable = (list: Array<RoomState>, filterState: FilterState, clickHandler: (item: RoomState) => any) => {
+    if (filterState.filter) {
+        console.log(`FILTER : ${filterState.language}\t${filterState.proficiencyLevel}\t${filterState.capacity} ${filterState.filter}`)
+        list = filterRooms(list, filterState);
+    }
+
+    return (<TableContainer component={Paper}>
+        <Table sx={{minWidth: 1000}} aria-label="rooms table">
+            <TableHead>
+                <TableRow
+                    sx={{
+                        backgroundColor: `#1C2541`,
+                        '& .MuiTableCell-root': {
+                            color: '#FFFFFF',
+                        },
+                        border: "2px solid grey",
+                    }}
+                >
+                    <TableCell align="center">Language</TableCell>
+                    <TableCell align="center">Level</TableCell>
+                    <TableCell align="center">Users inside</TableCell>
+                    <TableCell align="center">Created</TableCell>
+                    <TableCell align="center">Room ID</TableCell>
+                </TableRow>
+                {list.map((item: RoomState) => (
+                    <TableRow key={item.language}
+                              sx={{
+                                  backgroundColor: `#3A506B`,
+                                  border: "2px solid grey",
+                                  '&:last-child td, &:last-child th': {
+                                      border: 0,
+                                  },
+                                  '&:hover': {
+                                      cursor: "pointer",
+                                      backgroundColor: "#DBE4EE",
+                                      '& .MuiTableCell-root': {
+                                          color: '#000000',
+                                      },
+                                  },
+                                  '& .MuiTableCell-root': {
+                                      color: '#FFFFFF',
+                                  },
+                              }}
+                              onClick={() => clickHandler(item)}
+                    >
+                        <TableCell align="center">{item.language}</TableCell>
+                        <TableCell align="center">{item.proficiencyLevel}</TableCell>
+                        <TableCell align="center">{item.capacity}</TableCell>
+                        <TableCell align="center">{item.createdAt.toString()}</TableCell>
+                        <TableCell align="center">{item.roomID}</TableCell>
+                    </TableRow>
+                ))}
+            </TableHead>
+        </Table>
+    </TableContainer>)
 }
 
 

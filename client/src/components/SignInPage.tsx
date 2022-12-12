@@ -36,7 +36,6 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
 
     const navigate = useNavigate();
     const dispatch = useAppDispatch()
-    const accessToken = useAppSelector(selectToken)
     const user = useAppSelector(selectUser);
     const [displayMsg, setDisplayMsg] = React.useState<String>("");
     const displayMsgRef = useRef<HTMLDivElement>(null);
@@ -52,12 +51,6 @@ export const SignInPage: React.FC<LoginProps> = (props) => {
     if (user.isAuthenticated) {
         return <Navigate to={"/start"}/>
     }
-
-    const validateEmail = (email: string) => {
-        const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        return re.test(email);
-    };
-
 
     const handleChange =
         (prop: keyof Partial<LoginState>) => (event: React.ChangeEvent<HTMLInputElement> | any) => {

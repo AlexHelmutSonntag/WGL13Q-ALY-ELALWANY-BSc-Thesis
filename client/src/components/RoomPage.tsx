@@ -1,6 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
 import {MessageType, RoomState} from "../Types";
-import ReconnectingWebSocket from 'reconnecting-websocket';
 import "../style/RoomPage.scss";
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
@@ -11,13 +10,13 @@ import {Navigate, useNavigate} from "react-router-dom";
 import {useAppDispatch, useAppSelector} from "../store/hooks";
 import {selectClient, setSessionId} from "../feature/client/clientSlice";
 import {
+    getConnectedDevices,
     getMedia,
     handleAnswerMessage,
-    handleErrorMessage, handleGetUserMediaError,
-    handleICECandidateEvent, handleNegotiationNeededEvent,
-    handleNewICECandidateMessage, handleTrackEvent, sendToServer
+    handleErrorMessage,
+    handleICECandidateEvent,
+    handleNewICECandidateMessage, handleTrackEvent, openMediaDevices, sendToServer
 } from "../CallUtils";
-import {selectToken} from "../feature/token/tokenSlice";
 import {generateUuid} from "../Utils";
 import {DiscardFormButton} from "./FormButton";
 import {selectUser} from "../feature/user/userSlice";
@@ -46,17 +45,7 @@ export const RoomPage: React.FC<RoomState> = (props) => {
     let localStream: MediaStream;
     let rtcSender: RTCRtpSender;
     const navigate = useNavigate();
-    let localVideoTracks: MediaStreamTrack[];
-    const accessToken = useAppSelector(selectToken);
-    let config: any;
-    if (accessToken) {
-        config = {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${accessToken}`
-            }
-        }
-    }
+
     const client = useAppSelector(selectClient);
     const dispatch = useAppDispatch();
 
@@ -64,26 +53,34 @@ export const RoomPage: React.FC<RoomState> = (props) => {
     let localVideoRef = useRef<HTMLVideoElement>(null);
     let videoState: VideoState = {mic: true, video: true};
     const [localFeed, setLocalFeed] = useState<VideoState>({mic: true, video: true});
+    useEffect(()=>{
+        console.log(`Hi`);
+    })
     const user = useAppSelector(selectUser);
     if (!user.isAuthenticated) {
         return <Navigate to={"/login"}/>
     }
     const handleVideoControllerChange = (prop: keyof VideoState) => (event: React.ChangeEvent<HTMLInputElement> | any) => {
         if (prop === "mic") {
-            localStream.getAudioTracks().forEach((track) => track.stop());
-            videoState.mic = !videoState.mic;
+            mediaConstraints.audio = !mediaConstraints.audio;
+             let streamPromise = openMediaDevices(mediaConstraints);
+             if(streamPromise!=null){
+                 streamPromise.then(stream =>{
+                     localStream = stream;
+                 })
+             }
+
         } else if (prop === "video") {
-            if (videoState.video) {
-                myPeerConnection.getSenders().forEach(sender => myPeerConnection.removeTrack(sender))
-            } else {
-                localStream.getTracks().forEach((track: MediaStreamTrack) => {
-                        console.log(`HERE ${JSON.stringify(track)} ${JSON.stringify(localStream)}`)
-                        myPeerConnection.addTrack(track, localStream)
-                    }
-                )
+
+            mediaConstraints.video = !mediaConstraints.video;
+            let streamPromise = openMediaDevices(mediaConstraints);
+            if(streamPromise!=null){
+                streamPromise.then(stream =>{
+                    localStream = stream;
+                })
             }
-            videoState.video = !videoState.video;
         }
+        console.log(`Changed!${JSON.stringify(mediaConstraints)}`)
         setLocalFeed({...localFeed, [prop]: !localFeed[prop]});
     }
 
@@ -111,11 +108,7 @@ export const RoomPage: React.FC<RoomState> = (props) => {
                 break;
             case MessageType.LEAVE:
                 console.log(`From : ${message.from} , ${message.data} , ${message.type}`);
-                if (remoteVideoRef.current!.srcObject) {
-                    if ("getTracks" in remoteVideoRef.current!.srcObject) {
-                        remoteVideoRef.current!.srcObject.getTracks().forEach((track) => track.stop());
-                    }
-                }
+                navigate(0);
                 break;
             default:
                 handleErrorMessage(`Wrong type of message received from server ${message.type}`, client);
@@ -157,6 +150,7 @@ export const RoomPage: React.FC<RoomState> = (props) => {
 
     const stop = async () => {
         console.log(`[${client.sessionId}] Sending 'leave' message to server`);
+
         sendToServer(conn, {
             from: client.sessionId,
             type: MessageType.LEAVE,
@@ -164,7 +158,7 @@ export const RoomPage: React.FC<RoomState> = (props) => {
         }, client)
 
         if (myPeerConnection) {
-            // console.log(`[${client.sessionId}] Close the RTCPeerConnection`);
+            myPeerConnection.getSenders().forEach(sender => myPeerConnection.removeTrack(sender))
 
             //Removing all event listeners
             myPeerConnection.onicecandidate = null;
@@ -181,35 +175,16 @@ export const RoomPage: React.FC<RoomState> = (props) => {
                 }
             }
 
-
             if (remoteVideoRef.current!.srcObject) {
                 if ("getTracks" in remoteVideoRef.current!.srcObject) {
                     remoteVideoRef.current!.srcObject.getTracks().forEach((track) => track.stop());
                 }
             }
 
-            {
-                // localVideoRef.current!.srcObject = null;
-                // remoteVideoRef.current!.srcObject = null;
-
-                //Closing the peer connection
-                // if (myPeerConnection) {
-                //     myPeerConnection.close();
-                // }
-                // myPeerConnection = null;
-                // console.log(`[${client.sessionId}] Close the peer connection`);
-
-
-                // if (conn != null) {
-                //     conn.close();
-                // }
-            }
-
         }
 
     }
     const handlePeerConnection = (message: any) => {
-        // createPeerConnection(conn,client,myPeerConnection,peerConnectionConfig,remoteVideoRef);
         createPeerConnection();
         console.log(`${JSON.stringify(localStream)}, ${JSON.stringify(client)}, ${JSON.stringify(myPeerConnection)}, ${localVideoRef}, ${JSON.stringify(mediaConstraints)}`)
         if (!localFeed.video || !localFeed.mic) {
@@ -219,7 +194,6 @@ export const RoomPage: React.FC<RoomState> = (props) => {
         if (message.data === "true") {
             console.log(myPeerConnection)
             myPeerConnection.addEventListener("negotiationneeded", (event: any) => {
-                // handleNegotiationNeededEvent(event,myPeerConnection,client,conn);
                 handleNegotiationNeededEvent(event);
             },)
 
@@ -240,7 +214,6 @@ export const RoomPage: React.FC<RoomState> = (props) => {
         },)
     }
     const handleNegotiationNeededEvent = (event: Event) => {
-        // console.log(`[${client.sessionId}] Negotiation needed event : ${event}`)
         myPeerConnection.createOffer().then((offer: any) => {
             return myPeerConnection.setLocalDescription(offer);
         }).then(() => {
@@ -249,9 +222,7 @@ export const RoomPage: React.FC<RoomState> = (props) => {
                 type: MessageType.OFFER,
                 sdp: myPeerConnection.localDescription
             }, client)
-
             console.log(`[${client.sessionId}] : SDP offer sent`)
-
         }).catch((error: any) => {
             console.log(`[${client.sessionId}] Failure to connect error : ${error}`)
         });
@@ -262,23 +233,23 @@ export const RoomPage: React.FC<RoomState> = (props) => {
         let sessionDescription = new RTCSessionDescription(message.sdp);
         if (sessionDescription != null && message.sdp != null) {
             console.log(`[${client.sessionId}]  RTC signalling state :  ${myPeerConnection.signalingState}`);
-
             myPeerConnection.setRemoteDescription(sessionDescription).then(() => {
                 console.log(`HERE ${localStream}`);
                 if (localStream) {
                     localStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
                 }
-                return navigator.mediaDevices.getUserMedia(mediaConstraints);
+                try{
+                    return openMediaDevices(mediaConstraints);
+                }catch (error){
+                    console.log(`Error accessing media devices. ${error}`);
+                }
+
             }).then((stream: any) => {
-                // console.log(`[${client.sessionId}] Local video stream obtained`);
                 localStream = stream;
                 try {
                     localVideoRef.current!.srcObject = localStream;
-                    // getLocalMediaStream(stream, localStream, client, localVideoRef, myPeerConnection)
-
                 } catch (error) {
                     console.log(`${client.sessionId} : ${error}`);
-                    // setLocalVideoSrc(window.URL.createObjectURL(stream));
                 }
             }).then(() => {
                 /*
@@ -287,7 +258,7 @@ export const RoomPage: React.FC<RoomState> = (props) => {
                  */
                 console.log(`[${client.sessionId}] Creating answer`)
                 return myPeerConnection.createAnswer();
-            }).then((answer: any) => {
+            }).then((answer: RTCSessionDescriptionInit) => {
                 /*
                 After having our answer, we establish the local description. This configures our end of the call
                 to match the settings specified in the SDP.
@@ -312,9 +283,9 @@ export const RoomPage: React.FC<RoomState> = (props) => {
     }
 
     const hangUp = () => {
-        myPeerConnection.getSenders().forEach(sender => myPeerConnection.removeTrack(sender))
-        localStream.getVideoTracks().forEach((track)=> track.stop())
-        stop().then(() => navigate("/start", {replace: true}));
+        if (myPeerConnection) {
+            stop().then(() => navigate("/start", {replace: true}));
+        }
     }
 
     onbeforeunload = (event: BeforeUnloadEvent) => {
@@ -326,18 +297,18 @@ export const RoomPage: React.FC<RoomState> = (props) => {
     const tryNewConnection = () => {
         dispatch(setSessionId(generateUuid()));
         navigate(0)
-        // conn = new WebSocket("wss://192.168.0.218:8080/socket");
     }
 
-    const copyRoomURL = () => {
+    const copyRoomURL = async () => {
         const type = "text/plain";
         let textToCopy = window.location.href;
         const blob = new Blob([textToCopy], {type});
         const data = [new ClipboardItem({[type]: blob})]
         console.log(`URL copied : ${textToCopy}`);
         navigator.clipboard.write(data).then((r) => console.log(r));
-        alert(`${textToCopy} copied to clipboard`);
 
+        let devices = await getConnectedDevices("videoinput");
+        console.log(`Connected devices ${JSON.stringify(devices)}`);
     }
 
     return <div id={"room-container"}>
@@ -374,10 +345,10 @@ export const RoomPage: React.FC<RoomState> = (props) => {
         </div>
         <div id={"video-controls"}>
             <div id={"controller-container"}>
-                {videoState.video ?
+                {localFeed.video ?
                     <VideocamIcon onClick={handleVideoControllerChange("video")}/> :
                     <VideocamOffIcon onClick={handleVideoControllerChange("video")}/>}
-                {videoState.mic ? <MicIcon onClick={handleVideoControllerChange("mic")}/> :
+                {localFeed.mic ? <MicIcon onClick={handleVideoControllerChange("mic")}/> :
                     <MicOffIcon onClick={handleVideoControllerChange("mic")}/>}
                 <CallEndIcon onClick={() => hangUp()} style={{backgroundColor: "red", borderRadius: "50%"}}/>
             </div>

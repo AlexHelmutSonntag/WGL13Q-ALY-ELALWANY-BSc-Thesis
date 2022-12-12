@@ -3,6 +3,15 @@ import {ClientSession, MessageType, UserMediaError} from "./Types";
 import ReconnectingWebSocket from "reconnecting-websocket";
 
 
+export const openMediaDevices = async (constraints: any) => {
+    return await navigator.mediaDevices.getUserMedia(constraints);
+}
+
+export const getConnectedDevices = async (type: any) => {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    return devices.filter(device=> device.kind===type);
+}
+
 export const muteMic = (videoRef: React.RefObject<HTMLVideoElement>, client: ClientSession, value: boolean) => {
     videoRef.current!.muted = value;
     console.log(`[${client.sessionId}] Mic turned off`);
@@ -93,7 +102,7 @@ export const handleTrackEvent = async (event: any, client: ClientSession, remote
 //     })
 // }
 
-export const getMedia  = async (localStream: MediaStream, client: ClientSession, peerConnection: RTCPeerConnection, localVideoRef: React.RefObject<HTMLVideoElement>, constrains: any, sender: RTCRtpSender) => {
+export const getMedia = async (localStream: MediaStream, client: ClientSession, peerConnection: RTCPeerConnection, localVideoRef: React.RefObject<HTMLVideoElement>, constrains: any, sender: RTCRtpSender) => {
     console.log(`HERE localStream ${localStream}`)
     if (localStream) {
         localStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
@@ -114,7 +123,7 @@ export const getMedia  = async (localStream: MediaStream, client: ClientSession,
         localStream.getTracks().forEach((track: MediaStreamTrack) => {
                 console.log(`HERE ${JSON.stringify(track)} ${JSON.stringify(localStream)}`)
 
-                sender =  peerConnection.addTrack(track, localStream)
+                sender = peerConnection.addTrack(track, localStream)
             }
         )
     } catch (error) {
