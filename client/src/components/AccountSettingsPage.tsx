@@ -16,12 +16,12 @@ import {
     setEmail,
     setFirstname,
     setGender,
-    setLastname, setRole, setUsername,
+    setLastname,
 } from "../feature/user/userSlice";
 import {removeToken, selectToken} from "../feature/token/tokenSlice";
 import {FormInputMessageContainer} from "./FormInputMessageContainer";
 import "../style/AccountSettingsPage.scss"
-import {Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from "@mui/material";
 
 export const AccountSettingsPage: React.FC<AuthenticatedUser> = (props: AuthenticatedUser) => {
     const navigate = useNavigate();
@@ -59,16 +59,6 @@ export const AccountSettingsPage: React.FC<AuthenticatedUser> = (props: Authenti
             }
         }
     }
-    // const resetUserData = () =>{
-    //     dispatch(setFirstname(props.firstName))
-    //     dispatch(setLastname(props.lastName))
-    //     dispatch(setUsername(props.username))
-    //     dispatch(setRole(props.role))
-    //     dispatch(setGender(props.gender))
-    //     dispatch(setDOB(props.dob))
-    //     dispatch(setEmail(props.email))
-    // }
-
     const updateUserData = (body: any) => {
         let dd_mm_yyyy = body.dob.toLocaleDateString();
         let dob = dd_mm_yyyy.replace(/(\d+)\/(\d+)\/(\d+)/g, "$3-$2-$1");

@@ -8,6 +8,4 @@ public interface RoomService {
 
     RoomRequestBody processRoomSelection(RoomRequestBody requestBody, BindingResult bindingResult);
     RoomRequestBody displaySelectedRoom(String sid, String uuid);
-    WebSocketSession processRoomExit(String sid, String uuid);
-    RoomRequestBody requestRandomRoomNumber(String uuid);
 }

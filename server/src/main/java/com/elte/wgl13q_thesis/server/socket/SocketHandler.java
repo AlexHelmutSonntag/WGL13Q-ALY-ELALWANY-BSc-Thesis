@@ -29,12 +29,10 @@ public class SocketHandler extends TextWebSocketHandler {
     @Autowired
     private RoomServiceImpl roomServiceImpl;
 
-    //    @JsonIgnore
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private Map<String, Room> sessionIdToRoomMap = new HashMap<>();
 
-    //    @Override
     public void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage textMessage) {
         try {
 
@@ -52,12 +50,7 @@ public class SocketHandler extends TextWebSocketHandler {
 
             Room room;
             switch (message.getType()) {
-                // text message from client has been received
                 case TEXT -> log.info("[ws] Text message: {}", message.getData());
-                // message.data is the text sent by client
-                // process text message if needed
-
-                // process signal received from client
                 case OFFER, ANSWER, ICE -> {
                     Object candidate = message.getCandidate();
                     Object sdp = message.getSdp();
@@ -85,7 +78,6 @@ public class SocketHandler extends TextWebSocketHandler {
                     }
                 }
 
-                // identify user and their peer
                 case JOIN -> {
                     // message.getRoomNumber() contains connected room id
                     int roomNumber = 1;
@@ -105,11 +97,8 @@ public class SocketHandler extends TextWebSocketHandler {
                 }
 
                 case LEAVE -> {
-                    // message.getRoomNumber() contains connected room id
                     log.info("[ws] {} is going to leave Room: #{}", userName, message.getData());
-                    // room id taken by session id
                     room = sessionIdToRoomMap.get(session.getId());
-                    // remove the client which leaves from the Room clients list
                     Optional<String> client = roomServiceImpl.getClients(room).entrySet().stream()
                             .filter(entry -> Objects.equals(entry.getValue().getId(), session.getId()))
                             .map(Map.Entry::getKey)
@@ -143,7 +132,6 @@ public class SocketHandler extends TextWebSocketHandler {
         }
     }
 
-    //    @Override
     public void afterConnectionClosed(final WebSocketSession session, @NonNull final CloseStatus status) {
         log.debug("[ws] Session has been closed with status {}", status);
         Room room = sessionIdToRoomMap.get(session.getId());
@@ -155,7 +143,6 @@ public class SocketHandler extends TextWebSocketHandler {
         client.ifPresent(c -> roomServiceImpl.removeClientByName(room, c));
     }
 
-    //    @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) {
         sendMessage(session, new WebSocketMessage("Server",
                 MessageType.JOIN,
@@ -165,7 +152,6 @@ public class SocketHandler extends TextWebSocketHandler {
                 null,
                 null,
                 null));
-//        sendMessage(session, new WebSocketMessage("Server", MessageType.JOIN, Boolean.toString(!sessionIdToRoomMap.isEmpty()), null, null));
         log.info(session.toString());
         log.info(session.getId());
         log.info("[ws] Connection established from {} ", session.getId());

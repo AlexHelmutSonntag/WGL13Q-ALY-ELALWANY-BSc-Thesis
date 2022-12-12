@@ -93,12 +93,6 @@ public class AppUserService implements UserDetailsService {
             if (userOptional.isPresent()) {
                 AppUser user = userOptional.get();
                 deleteUser(user.getId());
-//                Long userId = user.getId();
-//                boolean exists = appUserRepository.existsById(userId);
-//                if (exists) {
-//                    appUserRepository.deleteById(userId);
-//                    log.info("User with username  {} deleted", user.getUsername());
-//                }
             } else {
                 log.info("User with username {} not present", username);
                 throw new UsernameNotFoundException("User with username " + username + " does not exist");
@@ -166,17 +160,6 @@ public class AppUserService implements UserDetailsService {
         log.info("Updating : user {} now has role : {}", appUser.getUsername(), role);
         appUserRepository.save(appUser);
     }
-
-//    public void removeUserRole(Long userId, AppUserRole role) {
-//        AppUser appUser = fetchUserFromDB(userId);
-//        log.info("User fetched : {}", appUser.getUsername());
-//        if (!appUser.getRoles().contains(role)) {
-//            log.info("User {} does not have role {}", appUser.getUsername(), role);
-//            return;
-//        }
-//        log.info("Removing role {} from user {}", role, appUser.getUsername());
-//        appUser.getRoles().remove(role);
-//    }
 
     public boolean isEmailTaken(String email) {
         Optional<AppUser> userOptional = appUserRepository.findUserByEmail(email);

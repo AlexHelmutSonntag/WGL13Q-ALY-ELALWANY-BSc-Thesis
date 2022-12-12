@@ -18,7 +18,7 @@ import {DiscardFormButton, ReturnFormButton} from "./FormButton";
 import axios from "axios";
 import {selectClient} from "../feature/client/clientSlice";
 import {selectToken} from "../feature/token/tokenSlice";
-import {languageOptions, levelOptions} from "../Utils";
+import {getRooms, languageOptions, levelOptions, renderRoomsTable} from "../Utils";
 import {addRoom, removeAllRooms, selectRooms} from "../feature/rooms/roomsSlice";
 
 
@@ -45,67 +45,6 @@ const renderRoomsList = (list: Array<RoomState>, filterState: FilterState, click
         </ListItem>
     })
 }
-const filterRooms = (list: Array<RoomState>, filterState: FilterState) => {
-    return list.filter(room => room.capacity === filterState.capacity && room.language === filterState.language && room.proficiencyLevel === filterState.proficiencyLevel);
-}
-
-const renderRoomsTable = (list: Array<RoomState>, filterState: FilterState, clickHandler: (item: RoomState) => any) => {
-    if (filterState.filter) {
-        console.log(`FILTER : ${filterState.language}\t${filterState.proficiencyLevel}\t${filterState.capacity} ${filterState.filter}`)
-        list = filterRooms(list, filterState);
-    }
-
-    return (<TableContainer component={Paper}>
-        <Table sx={{minWidth: 1000}} aria-label="rooms table">
-            <TableHead>
-                <TableRow
-                    sx={{
-                        backgroundColor: `#1C2541`,
-                        '& .MuiTableCell-root': {
-                            color: '#FFFFFF',
-                        },
-                        border: "2px solid grey",
-                    }}
-                >
-                    <TableCell align="center">Language</TableCell>
-                    <TableCell align="center">Level</TableCell>
-                    <TableCell align="center">Users inside</TableCell>
-                    <TableCell align="center">Created</TableCell>
-                    <TableCell align="center">Room ID</TableCell>
-                </TableRow>
-                {list.map((item: RoomState) => (
-                    <TableRow key={item.language}
-                              sx={{
-                                  backgroundColor: `#3A506B`,
-                                  border: "2px solid grey",
-                                  '&:last-child td, &:last-child th': {
-                                      border: 0,
-                                  },
-                                  '&:hover': {
-                                      cursor: "pointer",
-                                      backgroundColor: "#DBE4EE",
-                                      '& .MuiTableCell-root': {
-                                          color: '#000000',
-                                      },
-                                  },
-                                  '& .MuiTableCell-root': {
-                                      color: '#FFFFFF',
-                                  },
-                              }}
-                              onClick={() => clickHandler(item)}
-                    >
-                        <TableCell align="center">{item.language}</TableCell>
-                        <TableCell align="center">{item.proficiencyLevel}</TableCell>
-                        <TableCell align="center">{item.capacity}</TableCell>
-                        <TableCell align="center">{item.createdAt.toString()}</TableCell>
-                        <TableCell align="center">{item.roomID}</TableCell>
-                    </TableRow>
-                ))}
-            </TableHead>
-        </Table>
-    </TableContainer>)
-}
-
 
 interface StartPageProps {
     passValuesToParent: (value: RoomState) => void;
@@ -145,6 +84,19 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
             }
         }
     }
+    const roomsRefreshHandler = async () => {
+        let roomsList = await getRooms(config)
+        let roomSet: Set<RoomState> = new Set<RoomState>();
+        dispatch(removeAllRooms)
+        if (roomsList !== undefined) {
+            roomsList.map(room => {
+                roomSet.add(room);
+                dispatch(addRoom(room))
+                console.log(`${JSON.stringify(room)}`)
+            })
+        }
+        setRooms(Array.from(roomSet));
+    }
     const navigate = useNavigate();
 
     const handleRoomClick = (room: RoomState) => {
@@ -178,8 +130,7 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
                 console.log(response)
                 if (response.status === 201) {
                     alert("Room created");
-
-                    getRooms();
+                    roomsRefreshHandler();
                 } else {
                     alert("Server error!");
                 }
@@ -198,57 +149,12 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
             capacity: state.capacity,
             filter: state.filter,
         })
-        renderRoomsList(rooms, state, handleRoomClick);
     }
 
     const user = useAppSelector(selectUser);
     if (!user.isAuthenticated) {
         return <Navigate to={"/login"}/>
     }
-    console.log(user)
-
-    const getRooms = () => {
-        axios.get('https://192.168.0.218:8080/api/v1/room/all',
-            config,
-        ).then((response) => {
-                // console.log(response)
-                if (response.status === 200) {
-                    console.log(response.data);
-                    let list = [];
-                    for (let i = 0; i < response.data.length; i++) {
-                        // console.log(response.data[i].entry)
-                        list.push(response.data[i].entry)
-                    }
-                    let roomSet: Set<RoomState> = new Set<RoomState>();
-                    dispatch(removeAllRooms)
-                    list.map((entry: any) => {
-                        let roomObj: RoomState = {
-                            language: entry.language,
-                            proficiencyLevel: entry.proficiencyLevel,
-                            capacity: entry.clients.length,
-                            createdAt: entry.createdAt,
-                            clients: entry.clients.length !== 0 ? entry.clients : [],
-                            roomID: entry.roomNumber,
-                        }
-
-                        roomSet.add(roomObj);
-                        setRooms(Array.from(roomSet));
-                        dispatch(addRoom(roomObj))
-                    })
-
-
-                } else {
-                    console.log(`Here ${response.status}`);
-                }
-            }
-        ).catch((error) => {
-            if (error.response.status === 403) {
-                console.log(error.response);
-                alert('Your login token expired, please logout and login again.');
-            }
-        });
-    }
-    renderRoomsList(rooms, filterState, handleRoomClick);
     return (
         <div id={"start-page"} style={{
             backgroundColor: '#3a506b',
@@ -336,7 +242,7 @@ export const StartPage: React.FC<StartPageProps> = (props) => {
                             '&:hover': {
                                 cursor: "pointer",
                             }
-                        }} onClick={() => getRooms()}/>
+                        }} onClick={() => roomsRefreshHandler()}/>
                     </div>
                 </div>
                 <div id="room-section" style={{

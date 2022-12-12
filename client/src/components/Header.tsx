@@ -12,9 +12,6 @@ import {removeUser, selectUser, setAuthenticated} from "../feature/user/userSlic
 import {removeToken} from "../feature/token/tokenSlice";
 import {Role} from "../Types";
 
-interface HeaderProps {
-    loggedIn: boolean;
-}
 
 export const Header: React.FC = () => {
     const navigate = useNavigate();
@@ -29,7 +26,6 @@ export const Header: React.FC = () => {
         navigate("/");
     }
 
-    // const conditionalRef = user.isAuthenticated? "/home" : "/";
     const conditionalRef = user.isAuthenticated? "/" : "/";
     return (
         <div className={"header"}>
@@ -67,16 +63,6 @@ export const Header: React.FC = () => {
                                     Github
                                 </Button>
                             </Box>
-                            {/*<Box>*/}
-                            {/*    <Button href={"/docs"} sx={{*/}
-                            {/*        fontSize: 'x-large',*/}
-                            {/*        color: '#1C2541',*/}
-                            {/*        fontWeight: 300,*/}
-                            {/*        textTransform: "none"*/}
-                            {/*    }}>*/}
-                            {/*        Docs*/}
-                            {/*    </Button>*/}
-                            {/*</Box>*/}
                             {user.isAuthenticated &&
                                 <Box>
                                     <Button href={"/start"} sx={{
