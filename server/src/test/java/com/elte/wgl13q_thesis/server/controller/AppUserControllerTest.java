@@ -1214,4 +1214,38 @@ public class AppUserControllerTest {
                         .extract().response();
         Assertions.assertEquals(HTTP_BAD_REQUEST, response.getStatusCode());
     }
+
+    @Test
+    public void shouldReturn404OnUnknownPathForUser() {
+        authSetupWithCredentials(AUTH_ADMIN_USERNAME, AUTH_ADMIN_SECRET);
+        String accessToken = env.get("access_token");
+        Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .and()
+                .auth()
+                .oauth2(accessToken)
+                .get("/api/v1/user/")
+                .then()
+                .extract()
+                .response();
+        Assertions.assertEquals(HTTP_NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    public void shouldReturn404OnUnknownWrongAPIVersion() {
+        authSetupWithCredentials(AUTH_ADMIN_USERNAME, AUTH_ADMIN_SECRET);
+        String accessToken = env.get("access_token");
+        Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .and()
+                .auth()
+                .oauth2(accessToken)
+                .get("/api/v2/user/all")
+                .then()
+                .extract()
+                .response();
+        Assertions.assertEquals(HTTP_NOT_FOUND, response.getStatusCode());
+    }
 }
