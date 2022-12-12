@@ -1,6 +1,7 @@
 package com.elte.wgl13q_thesis.server.controller;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.elte.wgl13q_thesis.server.model.AppUserRole;
 import com.elte.wgl13q_thesis.server.model.Room;
 import com.elte.wgl13q_thesis.server.model.RoomRequestBody;
 import com.elte.wgl13q_thesis.server.service.RoomService;
@@ -80,21 +81,20 @@ public class RoomController {
                 response, HttpStatus.CREATED);
     }
 
-//    @GetMapping(path = "/{sid}/user/{uuid}")
-//    public ResponseEntity<?> displaySelectedRoom(@PathVariable("sid") final String sid, @PathVariable("uuid") final String uuid) {
-//        return new ResponseEntity<RoomRequestBody>(this.roomService.displaySelectedRoom(sid, uuid), HttpStatus.OK);
-//    }
-
     @DeleteMapping(path = "/{roomId}")
     public ResponseEntity<?> deleteRoom(@PathVariable("roomId") Integer roomId, @RequestHeader(AUTHORIZATION) String authorizationHeader) {
         try {
             DecodedJWT decodedJWT = AuthUtils.createDecodedJWT(authorizationHeader);
             String[] roles = AuthUtils.getRolesFromDecodedJWT(decodedJWT);
+            boolean isAdmin = stream(roles).anyMatch(role -> role.equalsIgnoreCase(String.valueOf(AppUserRole.ADMIN)));
+
             for (String role :
                     roles) {
                 log.info(role);
             }
-            if (stream(roles).anyMatch(role -> role.equalsIgnoreCase("ADMIN"))) {
+            log.info(String.valueOf(isAdmin));
+            if (isAdmin) {
+                log.info("here");
                 String roomIdString = roomId.toString();
                 Optional<Room> roomOptional = roomService.findRoomByStringId(roomIdString);
                 log.info(String.valueOf(roomOptional.isEmpty()));

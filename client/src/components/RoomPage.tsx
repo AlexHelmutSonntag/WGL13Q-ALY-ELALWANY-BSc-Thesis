@@ -345,11 +345,11 @@ export const RoomPage: React.FC<RoomState> = (props) => {
         </div>
         <div id={"video-controls"}>
             <div id={"controller-container"}>
-                {localFeed.video ?
-                    <VideocamIcon onClick={handleVideoControllerChange("video")}/> :
-                    <VideocamOffIcon onClick={handleVideoControllerChange("video")}/>}
-                {localFeed.mic ? <MicIcon onClick={handleVideoControllerChange("mic")}/> :
-                    <MicOffIcon onClick={handleVideoControllerChange("mic")}/>}
+                {/*{localFeed.video ?*/}
+                {/*    <VideocamIcon onClick={handleVideoControllerChange("video")}/> :*/}
+                {/*    <VideocamOffIcon onClick={handleVideoControllerChange("video")}/>}*/}
+                {/*{localFeed.mic ? <MicIcon onClick={handleVideoControllerChange("mic")}/> :*/}
+                {/*    <MicOffIcon onClick={handleVideoControllerChange("mic")}/>}*/}
                 <CallEndIcon onClick={() => hangUp()} style={{backgroundColor: "red", borderRadius: "50%"}}/>
             </div>
         </div>
