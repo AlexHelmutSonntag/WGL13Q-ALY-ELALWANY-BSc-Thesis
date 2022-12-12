@@ -376,7 +376,22 @@ public class RoomControllerTest {
         Assertions.assertEquals(HTTP_FORBIDDEN, response.getStatusCode());
     }
 
+    @Test
+    public void shouldFailOnDeleteAllRoomsWithExpiredToken() {
 
+        String accessToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbm5hc21pdGgiLCJyb2xlcyI6WyJBRE1JTiJdLCJpc3MiOiJodHRwczovLzE5Mi4xNjguMC4yMTg6ODA4MC9sb2dp";
+        Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .and()
+                .auth()
+                .oauth2(accessToken)
+                .delete("/api/v1/room/all")
+                .then()
+                .extract()
+                .response();
+        Assertions.assertEquals(HTTP_FORBIDDEN, response.getStatusCode());
+    }
     @Test
     public void shouldDeleteRoom() {
         authSetupWithCredentials(AUTH_ADMIN_USERNAME, AUTH_ADMIN_SECRET);
@@ -471,5 +486,70 @@ public class RoomControllerTest {
                 .response();
         Assertions.assertEquals(HTTP_FORBIDDEN, response.getStatusCode());
     }
+    @Test
+    public void shouldFailOnDeleteRoomWithExpiredToken() {
+
+        String accessToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbm5hc21pdGgiLCJyb2xlcyI6WyJBRE1JTiJdLCJpc3MiOiJodHRwczovLzE5Mi4xNjguMC4yMTg6ODA4MC9sb2dp";
+        Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .and()
+                .auth()
+                .oauth2(accessToken)
+                .delete("/api/v1/room/"+"-1")
+                .then()
+                .extract()
+                .response();
+        Assertions.assertEquals(HTTP_FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    public void shouldReturnForbiddenOnUnknownPathForRoomWithNoAuth() {
+
+        Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .and()
+                .get("/api/v1/room/")
+                .then()
+                .extract()
+                .response();
+        Assertions.assertEquals(HTTP_FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    public void shouldReturnNotFoundOnUnknownPathForRoom() {
+        authSetupWithCredentials(AUTH_ADMIN_USERNAME, AUTH_ADMIN_SECRET);
+        String accessToken = env.get("access_token");
+        Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .and()
+                .auth()
+                .oauth2(accessToken)
+                .get("/api/v1/room/")
+                .then()
+                .extract()
+                .response();
+        Assertions.assertEquals(HTTP_NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    public void shouldReturnNotFoundOnWrongAPIVersion() {
+        authSetupWithCredentials(AUTH_ADMIN_USERNAME, AUTH_ADMIN_SECRET);
+        String accessToken = env.get("access_token");
+        Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .and()
+                .auth()
+                .oauth2(accessToken)
+                .get("/api/v2/room/")
+                .then()
+                .extract()
+                .response();
+        Assertions.assertEquals(HTTP_NOT_FOUND, response.getStatusCode());
+    }
+
 
 }
