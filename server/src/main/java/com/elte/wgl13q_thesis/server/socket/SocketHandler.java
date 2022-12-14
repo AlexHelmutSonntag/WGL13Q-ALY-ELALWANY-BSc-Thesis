@@ -2,11 +2,8 @@ package com.elte.wgl13q_thesis.server.socket;
 
 import com.elte.wgl13q_thesis.server.model.*;
 import com.elte.wgl13q_thesis.server.service.RoomServiceImpl;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -18,7 +15,6 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Consumer;
 
 @Component
 @Slf4j
@@ -50,7 +46,23 @@ public class SocketHandler extends TextWebSocketHandler {
 
             Room room;
             switch (message.getType()) {
-                case TEXT -> log.info("[ws] Text message: {}", message.getData());
+                case TEXT -> {
+                    log.info("[ws] Text message: {}", message.getData());
+                    Room existingRoom = sessionIdToRoomMap.get(session.getId());
+                    Map<String, WebSocketSession> clients = roomServiceImpl.getClients(existingRoom);
+                    for (Map.Entry<String, WebSocketSession> client : clients.entrySet()) {
+                        log.info("Room : " + existingRoom.getId() + " Client key : " + client.getKey());
+                        if (!client.getKey().equals(userName)) {
+                            sendMessage(client.getValue(),
+                                    new WebSocketMessage(
+                                            userName,
+                                            MessageType.TEXT,
+                                            data,
+                                            null,
+                                            null));
+                        }
+                    }
+                }
                 case OFFER, ANSWER, ICE -> {
                     Object candidate = message.getCandidate();
                     Object sdp = message.getSdp();

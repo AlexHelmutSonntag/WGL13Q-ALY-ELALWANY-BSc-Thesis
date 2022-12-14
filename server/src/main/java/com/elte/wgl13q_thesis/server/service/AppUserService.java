@@ -58,7 +58,6 @@ public class AppUserService implements UserDetailsService {
 
     public AppUser fetchUserFromDB(Long userId) {
         return appUserRepository.findById(userId).orElse((null));
-//        -> new IllegalStateException("User with id " + userId + " does not exist"));
     }
 
     public AppUser fetchUserFromDB(String username) throws IllegalStateException {
@@ -75,7 +74,6 @@ public class AppUserService implements UserDetailsService {
 
     public boolean addNewUser(AppUser appUser) {
         if (isEmailTaken(appUser.getEmail()) || isUsernameTaken(appUser.getUsername())) {
-//            throw new IllegalStateException("Email taken!");
             return false;
         }
         appUser.setPassword(passwordEncoder().encode(appUser.getPassword()));

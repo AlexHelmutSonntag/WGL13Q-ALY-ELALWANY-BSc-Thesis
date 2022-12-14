@@ -5,18 +5,14 @@ import com.elte.wgl13q_thesis.server.model.ProficiencyLevel;
 import com.elte.wgl13q_thesis.server.model.Room;
 import com.elte.wgl13q_thesis.server.util.Parser;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.List;
 import java.util.Set;
 
 @ActiveProfiles("test")

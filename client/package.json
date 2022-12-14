@@ -32,6 +32,7 @@
     "reactjs-popup": "^2.0.5",
     "reconnecting-websocket": "^4.4.0",
     "redux-persist": "^6.0.0",
+    "registry.npmjs.org": "^1.0.1",
     "typescript": "^4.7.4",
     "uuid": "^9.0.0",
     "web-vitals": "^2.1.4"
@@ -41,7 +42,8 @@
     "secure-start": "HTTPS=true SSL_CRT_FILE=/Users/ali/Desktop/ELTE/WGL13Q-ALY-ELALWANY-BSc-Thesis/new_cert.pem SSL_KEY_FILE=/Users/ali/Desktop/ELTE/WGL13Q-ALY-ELALWANY-BSc-Thesis/new_cert-key.pem react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "install": "npm install registry.npmjs.org"
   },
   "eslintConfig": {
     "extends": [

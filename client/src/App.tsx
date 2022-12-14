@@ -4,7 +4,7 @@ import './style/App.scss'
 import './style/Login-Logout.scss'
 import {Header} from "./components/Header";
 import {Footer} from "./components/Footer";
-import {BrowserRouter as Router, Navigate, Route, Routes, useNavigate} from "react-router-dom";
+import {BrowserRouter as Router, Route, Routes} from "react-router-dom";
 import {SignInPage} from "./components/SignInPage";
 import {PageNotFound} from "./components/PageNotFound";
 import {HomePage} from "./components/HomePage";
@@ -17,7 +17,6 @@ import {
     selectUser
 } from "./feature/user/userSlice";
 import {selectToken} from "./feature/token/tokenSlice";
-// import {Tester} from "./components/Tester";
 import {IndexPage} from "./components/IndexPage";
 import {RoomPage} from "./components/RoomPage";
 import {AdminPage} from "./components/AdminPage";

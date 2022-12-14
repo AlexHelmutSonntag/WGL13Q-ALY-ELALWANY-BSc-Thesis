@@ -44,14 +44,12 @@ export const handleAnswerMessage = (message: any, client: ClientSession, peerCon
 }
 
 export const handleICECandidateEvent = (event: any, client: ClientSession, websocketConnection: WebSocket | ReconnectingWebSocket) => {
-    // console.log(`[${client.sessionId}] ICE Candidate Event ? ${event.candidate}`);
     if (event.candidate) {
         sendToServer(websocketConnection, {
             from: client.sessionId,
             type: MessageType.ICE,
             candidate: event.candidate
         }, client);
-        // console.log(`[${client.sessionId}] ICE Candidate Event : ICE Candidate sent ${event.candidate}`);
     }
 }
 
@@ -75,39 +73,18 @@ export const handleNegotiationNeededEvent = (event: Event, peerConnection: RTCPe
 }
 
 export const handleTrackEvent = async (event: any, client: ClientSession, remoteVideoRef: React.RefObject<HTMLVideoElement>) => {
-    // console.log(`[${client.sessionId}] Setting stream to remote video element`);
-    // console.log(`HERE ${event.streams}`)
+
     remoteVideoRef.current!.srcObject = event.streams[0];
-    // if (remoteVideoRef.current!.paused) {
     return await remoteVideoRef.current!.play();
-    // if (remoteVideoPlayPromise !== undefined) {
-    // remoteVideoPlayPromise.then(() => console.log(`[${client.sessionId}] Remote video displayed`))
-    //     .catch((err) => {
-    //         console.log(`Error playing remote video ${err}`)
-    //     })
-    // }
-    // remoteVideoRef.current!.play().then(() => console.log(`[${client.sessionId}] Remote video displayed`)).catch((err) => console.log(`Error playing remote video ${err}`))
-    // }
+
 }
 
-//
-// export const createPeerConnection = (websocketConnection: WebSocket, client: ClientSession, peerConnection: RTCPeerConnection, peerConnectionConfig: any, remoteVideoRef: React.RefObject<HTMLVideoElement>) => {
-//     peerConnection = new RTCPeerConnection(peerConnectionConfig);
-//     peerConnection.addEventListener("icecandidate", (event: any) => {
-//         handleICECandidateEvent(event, client, websocketConnection)
-//     })
-//     console.log(`[${client.sessionId}] creating peer connection`);
-//     peerConnection.addEventListener("track", (event: any) => {
-//         handleTrackEvent(event, client, remoteVideoRef);
-//     })
-// }
 
 export const getMedia = async (localStream: MediaStream, client: ClientSession, peerConnection: RTCPeerConnection, localVideoRef: React.RefObject<HTMLVideoElement>, constrains: any, sender: RTCRtpSender) => {
     console.log(`HERE localStream ${localStream}`)
     if (localStream) {
         localStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
     }
-    // getLocalMediaStream(localStream, localStream, client, localVideoRef, peerConnection)
     try {
 
         localStream = await navigator.mediaDevices.getUserMedia(constrains)
@@ -115,10 +92,6 @@ export const getMedia = async (localStream: MediaStream, client: ClientSession, 
         localVideoRef.current!.onloadedmetadata = (async (ev: any) => {
             let localVideoPlayPromise = await localVideoRef.current!.play();
             console.log(`[${client.sessionId}] Local video displayed`)
-            // if (localVideoPlayPromise !== undefined) {
-            //     localVideoPlayPromise.then(() => console.log(`[${client.sessionId}] Local video displayed`))
-            //         .catch((err) => console.log(`Error when playing local video${err}`))
-            // }
         })
         localStream.getTracks().forEach((track: MediaStreamTrack) => {
                 console.log(`HERE ${JSON.stringify(track)} ${JSON.stringify(localStream)}`)
@@ -130,46 +103,7 @@ export const getMedia = async (localStream: MediaStream, client: ClientSession, 
         console.log(`Error when playing local video${error}`)
         handleGetUserMediaError(error, client)
     }
-
-// navigator.mediaDevices.getUserMedia(constrains)
-//     .then((mediaStream: MediaStream) => {
-//         localStream = mediaStream;
-//         localVideoRef.current!.srcObject = localStream;
-//         localVideoRef.current!.onloadedmetadata = (async (ev: any) => {
-//             let localVideoPlayPromise = localVideoRef.current!.play();
-//             console.log(`HERE localVideoPlayPromise ${JSON.stringify(localVideoPlayPromise)}`)
-//             if (localVideoPlayPromise !== undefined) {
-//                 localVideoPlayPromise.then(() => console.log(`[${client.sessionId}] Local video displayed`))
-//                     .catch((err) => console.log(`Error when playing local video${err}`))
-//             }
-//         })
-//         localStream.getTracks().forEach((track: MediaStreamTrack) => {
-//             console.log(`HERE ${JSON.stringify(track)} ${JSON.stringify(localStream)}`)
-//             return peerConnection.addTrack(track, localStream)
-//         });
-//     }).catch((error: any) => handleGetUserMediaError(error, client))
-//
 }
-
-// export const getLocalMediaStream = (mediaStream: MediaStream, localStream: MediaStream, client: ClientSession, localVideoRef: React.RefObject<HTMLVideoElement>, peerConnection: RTCPeerConnection) => {
-//     // console.log(`HERE ${mediaStream}`)
-//     localStream = mediaStream;
-//     // console.log(`[${client.sessionId}] Getting local media stream`);
-//     localVideoRef.current!.srcObject = localStream;
-//     localVideoRef.current!.onloadedmetadata = (async (ev: any) => {
-//         let localVideoPlayPromise = localVideoRef.current!.play();
-//         console.log(`HERE localVideoPlayPromise ${JSON.stringify(localVideoPlayPromise)}`)
-//         if (localVideoPlayPromise !== undefined) {
-//             localVideoPlayPromise.then(() => console.log(`[${client.sessionId}] Local video displayed`))
-//                 .catch((err) => console.log(`Error when playing local video${err}`))
-//         }
-//     })
-//
-//     localStream.getTracks().forEach((track: MediaStreamTrack) => {
-//         console.log(`HERE ${JSON.stringify(track)} ${JSON.stringify(localStream)}`)
-//         return peerConnection.addTrack(track, localStream)
-//     });
-// }
 
 export const handleGetUserMediaError = (error: any, client: ClientSession) => {
     console.log(`[${client.sessionId}] Error getting user media : ${error.message}`);
@@ -194,7 +128,6 @@ export const sendToServer = (conn: WebSocket | ReconnectingWebSocket, message: a
     if (!isOpen(conn)) {
         // console.log(conn)
         console.log("socket not open!");
-        // conn = new WebSocket("wss://192.168.0.218:8080/socket");
     }
     conn.send(JSON.stringify(message));
     console.log(`[${client.sessionId}] Message sent : ${message.type} ${message.data} `)

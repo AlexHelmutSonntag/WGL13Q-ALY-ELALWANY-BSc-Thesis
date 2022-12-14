@@ -4,20 +4,15 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.elte.wgl13q_thesis.server.model.AppUserRole;
 import com.elte.wgl13q_thesis.server.model.Room;
 import com.elte.wgl13q_thesis.server.model.RoomRequestBody;
-import com.elte.wgl13q_thesis.server.service.RoomService;
 import com.elte.wgl13q_thesis.server.service.RoomServiceImpl;
 import com.elte.wgl13q_thesis.server.util.AuthUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.expression.spel.ast.NullLiteral;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 

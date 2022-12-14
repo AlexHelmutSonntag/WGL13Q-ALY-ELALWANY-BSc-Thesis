@@ -13,7 +13,6 @@ public class TestUtils {
 
 
     public static String BASE_URL = System.getProperty("base-url");
-    //    = "http://localhost:8080/"
     public static String AUTH_USER_USERNAME = System.getProperty("auth-user-username");
     public static String AUTH_USER_SECRET = System.getProperty("auth-user-secret");
 

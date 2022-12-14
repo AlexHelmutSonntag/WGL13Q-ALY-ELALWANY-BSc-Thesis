@@ -2,18 +2,13 @@ package com.elte.wgl13q_thesis.server;
 
 import com.elte.wgl13q_thesis.server.model.AppUser;
 import com.elte.wgl13q_thesis.server.model.Gender;
-import com.elte.wgl13q_thesis.server.repo.AppUserRepository;
 import com.elte.wgl13q_thesis.server.service.AppUserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import static com.elte.wgl13q_thesis.server.model.AppUserRole.ADMIN;
 import static com.elte.wgl13q_thesis.server.model.AppUserRole.USER;

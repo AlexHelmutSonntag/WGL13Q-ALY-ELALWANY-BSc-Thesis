@@ -92,14 +92,6 @@ public class AppUser {
         this.role = role;
     }
 
-//
-//    public Set<AppUserRole> getRole() {
-//        return roles;
-//    }
-
-    //    public void addRole(AppUserRole role) {
-//        roles.add(role);
-//    }
     public String getPassword() {
         return password;
     }

@@ -2,10 +2,7 @@ import {v4 as uuidv4} from 'uuid';
 import {FilterState, Language, ProficiencyLevel, RoomState} from "./Types";
 import {MenuItem, Paper, Table, TableCell, TableContainer, TableHead, TableRow} from "@mui/material";
 import React from "react";
-import axios, {AxiosError, AxiosResponse} from "axios";
-import {addRoom, removeAllRooms} from "./feature/rooms/roomsSlice";
-import {Simulate} from "react-dom/test-utils";
-import error = Simulate.error;
+import axios from "axios";
 
 export const stringToDate = (date: String) => {
     let dd_mm_yyyy = date;
